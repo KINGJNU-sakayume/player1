@@ -139,8 +139,19 @@ none of them may be a secret.
 | --- | --- | --- |
 | [CI](.github/workflows/ci.yml) | Every pull request and every push to `main` | `npm ci`, typecheck, lint, tests, and a production build under the Pages sub-path |
 | [Deploy to GitHub Pages](.github/workflows/deploy-pages.yml) | Every push to `main`, or **Actions → Deploy to GitHub Pages → Run workflow** | Builds with the site's base path and your repository variables, then publishes `dist/` to GitHub Pages |
+| [PR preview](.github/workflows/pr-preview.yml) | Every push to a branch with an open pull request | Builds `main` and the PR, publishes production at the site root and the PR at `/preview/`, and links the preview on the PR |
 
-Both use the Node.js version in [`.nvmrc`](.nvmrc).
+All use the Node.js version in [`.nvmrc`](.nvmrc).
+
+**PR previews.** A pull request can be tried on the real site without merging: production stays at
+`https://kingjnu-sakayume.github.io/player1/` and the PR appears at `…/player1/preview/` (add `?preview` to use the
+sample catalogue). There is one preview slot — the most recently pushed PR — and the next production deploy removes
+it. Two one-time settings:
+
+1. **Settings → Environments → github-pages → Deployment branches and tags**: allow the PR branches (for example add
+   the rule `claude/*`), otherwise GitHub refuses to deploy from them.
+2. To sign in with Spotify on the preview, add `https://kingjnu-sakayume.github.io/player1/preview/callback` as a
+   Redirect URI of the Spotify app. The preview build always uses its own `/preview/callback`.
 
 ### One-time setup
 
