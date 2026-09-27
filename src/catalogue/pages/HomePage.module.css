@@ -1,3 +1,4 @@
+/* Liked songs beside followed artists. */
 .band {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
@@ -5,11 +6,25 @@
   align-items: start;
 }
 
+/* Playlists and history: a quieter band at the end of the page. */
+.secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(40px, 5vw, 88px);
+  align-items: start;
+}
+
 @media (max-width: 1180px) {
-  .band {
+  .band,
+  .secondary {
     grid-template-columns: minmax(0, 1fr);
     gap: clamp(48px, 7vh, 80px);
   }
+}
+
+.quiet {
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 
 .lede {

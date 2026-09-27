@@ -1,5 +1,6 @@
 import { Link, NavLink } from 'react-router';
 import { Icon, type IconName } from '../../catalogue/components/Icon';
+import { Logo } from '../../catalogue/components/Logo';
 import { cx } from '../../lib/cx';
 import { useSessionControls } from '../sessionControls';
 import { useSession } from '../sessionContext';
@@ -20,7 +21,7 @@ export function Rail() {
   return (
     <aside className={styles.rail}>
       <Link to="/" className={styles.logo} aria-label="ARC Music, home">
-        ARC
+        <Logo size={40} />
       </Link>
       <nav aria-label="Primary">
         <ul className={styles.nav}>

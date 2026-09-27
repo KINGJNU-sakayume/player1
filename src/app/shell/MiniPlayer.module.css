@@ -2,9 +2,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
   min-width: 0;
-  max-width: 360px;
+  max-width: 440px;
   padding-left: var(--space-4);
   border-left: 1px solid var(--line);
 }
@@ -47,6 +47,48 @@
 .link:hover .title {
   text-decoration: underline;
   text-underline-offset: 0.2em;
+}
+
+.transport {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+.play {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.play:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ink) 84%, var(--bg));
+}
+
+.play:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.play:disabled {
+  opacity: 0.4;
+}
+
+.play:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (max-width: 1100px) {
+  .text {
+    max-width: 140px;
+  }
 }
 
 .progress {

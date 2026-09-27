@@ -262,3 +262,96 @@
     height: 75%;
   }
 }
+
+/* ── Compact grids (playlists on Home) ────────────────────────────────── */
+
+.gridCompact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 28px 20px;
+}
+
+.gridCompact .tileTitle {
+  font-size: var(--text-small);
+}
+
+.gridCompact .tileTitle:hover {
+  text-decoration: none;
+}
+
+.gridCompact .tilePlay {
+  width: 36px;
+  height: 36px;
+  right: 8px;
+  bottom: 8px;
+}
+
+/* ── Artist tiles (followed artists on Home) ──────────────────────────── */
+
+.artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 28px 20px;
+}
+
+.artistTile {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  text-align: center;
+}
+
+.artistArt {
+  position: relative;
+  width: 100%;
+}
+
+.artistArt > a {
+  display: block;
+}
+
+.round {
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.round img,
+.round [role='img'] {
+  transition: transform var(--dur) var(--ease);
+}
+
+.artistTile:hover .round img,
+.artistTile:hover .round [role='img'] {
+  transform: scale(1.03);
+}
+
+.artistArt .tilePlay {
+  right: 2px;
+  bottom: 2px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.artistTile:hover .tilePlay,
+.artistArt .tilePlay:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.artistName {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-small);
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.artistName:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}

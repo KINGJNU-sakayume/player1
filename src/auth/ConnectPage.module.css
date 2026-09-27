@@ -15,12 +15,8 @@
 .logo {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 54px;
-  border: 1px solid var(--line-strong);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  width: 48px;
+  height: 48px;
 }
 
 .content {

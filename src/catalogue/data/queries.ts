@@ -18,6 +18,28 @@ export function useRecentlyPlayed() {
   });
 }
 
+export function useLikedTracks(pageSize = 20) {
+  const { catalogue } = useSession();
+  return useInfiniteQuery({
+    queryKey: [catalogue.mode, 'liked-tracks', pageSize],
+    queryFn: ({ pageParam, signal }) => catalogue.getLikedTracks({ offset: pageParam, limit: pageSize }, signal),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.hasMore ? last.offset + last.items.length : undefined),
+    staleTime: 2 * MINUTE,
+  });
+}
+
+export function useFollowedArtists(pageSize = 24) {
+  const { catalogue } = useSession();
+  return useInfiniteQuery({
+    queryKey: [catalogue.mode, 'followed-artists', pageSize],
+    queryFn: ({ pageParam, signal }) => catalogue.getFollowedArtists(pageParam, pageSize, signal),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    staleTime: 5 * MINUTE,
+  });
+}
+
 export function useSavedAlbums(pageSize = 24) {
   const { catalogue } = useSession();
   return useInfiniteQuery({
@@ -187,6 +209,7 @@ export function useToggleSaved() {
     onSettled: (_data, _error, { uri }) => {
       void queryClient.invalidateQueries({ queryKey: [catalogue.mode, 'saved', uri] });
       if (uri.startsWith('spotify:album:')) void queryClient.invalidateQueries({ queryKey: [catalogue.mode, 'saved-albums'] });
+      if (uri.startsWith('spotify:track:')) void queryClient.invalidateQueries({ queryKey: [catalogue.mode, 'liked-tracks'] });
     },
   });
 }

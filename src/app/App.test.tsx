@@ -22,7 +22,24 @@ describe('App (preview catalogue)', () => {
     expect(await screen.findByRole('heading', { name: /Spotify isn’t configured yet/ })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Preview without Spotify' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Library' })).toBeInTheDocument();
+    // Liked songs, followed artists and liked albums lead; playlists and history follow.
+    const liked = await screen.findByRole('heading', { name: 'Liked songs' });
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(headings.slice(0, 3)).toEqual(['Liked songs', 'Artists', 'Liked albums']);
+    expect(liked).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Vaundy' })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Recently played' })).toBeInTheDocument();
+  });
+
+  it('shows previous, play and next in the top-bar mini player', async () => {
+    const user = userEvent.setup();
+    renderApp('/?preview');
+    const mini = await screen.findByRole('group', { name: 'Mini player' });
+    await user.click(within(mini).getByRole('button', { name: 'Next track' }));
+    expect(await within(mini).findByText('I THINK')).toBeInTheDocument();
+    await user.click(within(mini).getByRole('button', { name: 'Previous track' }));
+    expect(await within(mini).findByText('EARFQUAKE')).toBeInTheDocument();
+    expect(within(mini).getByRole('button', { name: /^(Play|Pause)$/ })).toBeInTheDocument();
   });
 
   it('renders Now Playing with the synchronised line, its translation and working controls', async () => {
@@ -34,7 +51,7 @@ describe('App (preview catalogue)', () => {
     expect(await screen.findByText('Write it down before it fades')).toBeInTheDocument();
     expect(await screen.findByText('흐려지기 전에 적어 둬')).toBeInTheDocument();
     const upcoming = screen.getByRole('list', { name: 'Next lines' });
-    expect(within(upcoming).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(upcoming).getAllByRole('listitem')).toHaveLength(3);
 
     const toggle = screen.getByRole('button', { name: /Translation/ });
     expect(toggle).toHaveAttribute('aria-pressed', 'true');

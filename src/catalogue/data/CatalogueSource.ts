@@ -2,11 +2,14 @@ import type {
   AlbumDetail,
   AlbumSummary,
   ArtistDetail,
+  ArtistSummary,
+  CursorPage,
   Page,
   PlaylistSummary,
   RecentlyPlayedItem,
   SearchResults,
   SearchType,
+  TrackIdentity,
 } from '../../domain/types';
 
 export type SessionMode = 'spotify' | 'preview';
@@ -31,7 +34,11 @@ export interface SearchRequest {
 export interface CatalogueSource {
   readonly mode: SessionMode;
   getRecentlyPlayed(signal?: AbortSignal): Promise<RecentlyPlayedItem[]>;
+  /** Liked Songs, most recently liked first. */
+  getLikedTracks(page: PageRequest, signal?: AbortSignal): Promise<Page<TrackIdentity>>;
   getSavedAlbums(page: PageRequest, signal?: AbortSignal): Promise<Page<AlbumSummary>>;
+  /** Followed artists; `after` is the cursor returned by the previous page. */
+  getFollowedArtists(after: string | null, limit: number, signal?: AbortSignal): Promise<CursorPage<ArtistSummary>>;
   getPlaylists(page: PageRequest, signal?: AbortSignal): Promise<Page<PlaylistSummary>>;
   /** Album with its complete track sequence. */
   getAlbum(id: string, signal?: AbortSignal): Promise<AlbumDetail>;

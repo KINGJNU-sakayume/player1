@@ -8,6 +8,7 @@ import { PaletteTokens } from './PaletteTokens';
 import { QueueDrawerProvider } from './QueueDrawer';
 import { Rail } from './Rail';
 import { TopBar } from './TopBar';
+import { useStageTheme } from './useNowPlayingTheme';
 import styles from './AppShell.module.css';
 
 /** Shown when a stored authorization predates scopes the app now requires. */
@@ -30,6 +31,8 @@ function ScopeNotice() {
 export function AppShell() {
   const { pathname } = useLocation();
   const fixedViewport = pathname === '/now-playing';
+  // Now Playing takes on the colour of the album cover.
+  const stage = useStageTheme(fixedViewport);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,7 +40,12 @@ export function AppShell() {
 
   return (
     <QueueDrawerProvider>
-      <div className={styles.app} data-fixed-viewport={fixedViewport || undefined}>
+      <div
+        className={styles.app}
+        data-fixed-viewport={fixedViewport || undefined}
+        data-stage={stage?.tone}
+        style={stage?.style}
+      >
         <a href="#main" className={styles.skip}>
           Skip to content
         </a>

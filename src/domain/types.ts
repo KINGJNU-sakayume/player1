@@ -113,6 +113,13 @@ export interface Page<T> {
   hasMore: boolean;
 }
 
+/** A cursor-paged list (e.g. followed artists); `nextCursor` is null on the last page. */
+export interface CursorPage<T> {
+  items: T[];
+  total: number | null;
+  nextCursor: string | null;
+}
+
 export type SearchType = 'track' | 'artist' | 'album' | 'playlist';
 
 export interface SearchResults {

@@ -1,0 +1,158 @@
+name: PR preview
+
+# Deploys an open pull request to GitHub Pages without merging it:
+#   production (main)  → https://<owner>.github.io/<repo>/
+#   pull request       → https://<owner>.github.io/<repo>/preview/
+# Every push to a branch with an open PR refreshes the preview; the next
+# production deploy (push to main) removes it again. One preview at a time:
+# the most recently pushed PR wins.
+on:
+  push:
+    branches-ignore: [main]
+  # Re-deploy by hand: Actions → PR preview → Run workflow → choose the PR branch.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+# Shares the production deploy's queue so the two never publish at once.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      pr: ${{ steps.pr.outputs.number }}
+    steps:
+      - name: Find the open pull request
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`,
+              state: 'open',
+            });
+            if (data.length === 0) {
+              core.notice('No open pull request for this branch; nothing to preview.');
+              return;
+            }
+            core.setOutput('number', String(data[0].number));
+
+      - name: Check out the pull request
+        if: steps.pr.outputs.number
+        uses: actions/checkout@v5
+        with:
+          path: pr
+
+      - name: Check out main
+        if: steps.pr.outputs.number
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          path: main
+
+      - uses: actions/setup-node@v5
+        if: steps.pr.outputs.number
+        with:
+          node-version-file: pr/.nvmrc
+          cache: npm
+          cache-dependency-path: |
+            pr/package-lock.json
+            main/package-lock.json
+
+      - name: Configure Pages
+        if: steps.pr.outputs.number
+        id: pages
+        uses: actions/configure-pages@v5
+
+      # Same settings as deploy-pages.yml, so production is republished unchanged.
+      - name: Build production (main)
+        if: steps.pr.outputs.number
+        working-directory: main
+        run: npm ci && npm run build
+        env:
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+          VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
+          VITE_SPOTIFY_REDIRECT_URI: ${{ vars.VITE_SPOTIFY_REDIRECT_URI }}
+          VITE_LYRICS_PROVIDER: ${{ vars.VITE_LYRICS_PROVIDER }}
+          VITE_TRANSLATION_PROVIDER: ${{ vars.VITE_TRANSLATION_PROVIDER }}
+          VITE_TRANSLATION_ENDPOINT: ${{ vars.VITE_TRANSLATION_ENDPOINT }}
+          VITE_TRANSLATION_TARGET: ${{ vars.VITE_TRANSLATION_TARGET }}
+          VITE_ENABLE_PREVIEW: ${{ vars.VITE_ENABLE_PREVIEW }}
+
+      - name: Build pull request
+        if: steps.pr.outputs.number
+        working-directory: pr
+        run: npm ci && npm run build
+        env:
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/preview/
+          VITE_SPOTIFY_CLIENT_ID: ${{ vars.VITE_SPOTIFY_CLIENT_ID }}
+          # Empty on purpose: the preview's own <site>/preview/callback. Register that
+          # URI in the Spotify app to sign in on the preview.
+          VITE_SPOTIFY_REDIRECT_URI: ''
+          VITE_LYRICS_PROVIDER: ${{ vars.VITE_LYRICS_PROVIDER }}
+          VITE_TRANSLATION_PROVIDER: ${{ vars.VITE_TRANSLATION_PROVIDER }}
+          VITE_TRANSLATION_ENDPOINT: ${{ vars.VITE_TRANSLATION_ENDPOINT }}
+          VITE_TRANSLATION_TARGET: ${{ vars.VITE_TRANSLATION_TARGET }}
+          VITE_ENABLE_PREVIEW: ${{ vars.VITE_ENABLE_PREVIEW }}
+
+      - name: Compose site
+        if: steps.pr.outputs.number
+        run: node pr/scripts/compose-pages-preview.mjs main/dist pr/dist site preview
+
+      - name: Upload site
+        if: steps.pr.outputs.number
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.pr
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}preview/
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Link the preview on the pull request
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deployment.outputs.page_url }}preview/
+          PR_NUMBER: ${{ needs.build.outputs.pr }}
+        with:
+          script: |
+            const marker = '<!-- pr-preview -->';
+            const issue_number = Number(process.env.PR_NUMBER);
+            const body = [
+              marker,
+              `**Preview deployed** for ${context.sha.slice(0, 7)}: ${process.env.PREVIEW_URL}`,
+              '',
+              `Try it without Spotify: ${process.env.PREVIEW_URL}?preview`,
+              '',
+              'Production is unchanged. The preview is replaced by the next pushed PR and removed by the next deploy of main.',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+            });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number, body });
+            }

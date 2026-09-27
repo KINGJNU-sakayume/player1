@@ -33,6 +33,21 @@ export function createSpotifyCatalogueSource(client: SpotifyClient): CatalogueSo
       return dedupeRecentlyPlayed(mapRecentlyPlayed(page.items ?? []));
     },
 
+    async getLikedTracks(page: PageRequest, signal) {
+      const result = await api.getSavedTracks(client, page, signal);
+      return mapPage(result, (saved) => mapTrackIdentity(saved.track));
+    },
+
+    async getFollowedArtists(after, limit, signal) {
+      const { artists } = await api.getFollowedArtists(client, { limit, after }, signal);
+      const items = (artists?.items ?? []).flatMap((artist) => (artist ? [mapArtistSummary(artist)] : []));
+      return {
+        items,
+        total: typeof artists?.total === 'number' ? artists.total : null,
+        nextCursor: artists?.next ? (artists.cursors?.after ?? null) : null,
+      };
+    },
+
     async getSavedAlbums(page: PageRequest, signal) {
       const result = await api.getSavedAlbums(client, page, signal);
       return mapPage(result, (saved) => (saved.album ? mapAlbumSummary(saved.album) : null));

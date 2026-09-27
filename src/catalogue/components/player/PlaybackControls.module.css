@@ -49,7 +49,7 @@
 }
 
 .play:hover:not(:disabled) {
-  background: #2c2f2b;
+  background: color-mix(in srgb, var(--ink) 84%, var(--bg));
 }
 
 .play:disabled {

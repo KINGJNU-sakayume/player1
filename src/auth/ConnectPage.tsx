@@ -5,6 +5,7 @@ import { useSessionControls } from '../app/sessionControls';
 import { Button } from '../catalogue/components/Button';
 import { StatePanel } from '../catalogue/components/StatePanel';
 import { SPOTIFY_SCOPES } from '../spotify/scopes';
+import { Logo } from '../catalogue/components/Logo';
 import styles from './ConnectPage.module.css';
 
 /**
@@ -37,7 +38,7 @@ export function ConnectPage() {
     <div className={styles.page}>
       <div className={styles.rail}>
         <span className={styles.logo} aria-hidden="true">
-          ARC
+          <Logo size={40} />
         </span>
       </div>
 

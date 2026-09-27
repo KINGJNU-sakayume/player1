@@ -4,12 +4,14 @@ import type {
   SpotifyArtist,
   SpotifyCursorPaging,
   SpotifyDevice,
+  SpotifyFollowedArtists,
   SpotifyPaging,
   SpotifyPlayHistory,
   SpotifyPlaybackState,
   SpotifyPrivateUser,
   SpotifyQueue,
   SpotifySavedAlbum,
+  SpotifySavedTrack,
   SpotifySearchResponse,
   SpotifySimplifiedAlbum,
   SpotifySimplifiedPlaylist,
@@ -65,6 +67,34 @@ export async function getSavedAlbums(
     signal,
   );
   return required(result, '/me/albums');
+}
+
+/** GET /me/tracks — Liked Songs, newest first. */
+export async function getSavedTracks(
+  client: SpotifyClient,
+  page: { limit: number; offset: number },
+  signal?: AbortSignal,
+): Promise<SpotifyPaging<SpotifySavedTrack>> {
+  const result = await client.get<SpotifyPaging<SpotifySavedTrack>>(
+    '/me/tracks',
+    { limit: Math.min(page.limit, LIMITS.page), offset: page.offset },
+    signal,
+  );
+  return required(result, '/me/tracks');
+}
+
+/** GET /me/following?type=artist — cursor-paged by the last artist ID. */
+export async function getFollowedArtists(
+  client: SpotifyClient,
+  params: { limit: number; after?: string | null },
+  signal?: AbortSignal,
+): Promise<SpotifyFollowedArtists> {
+  const result = await client.get<SpotifyFollowedArtists>(
+    '/me/following',
+    { type: 'artist', limit: Math.min(params.limit, LIMITS.page), after: params.after ?? undefined },
+    signal,
+  );
+  return required(result, '/me/following');
 }
 
 export async function getMyPlaylists(
