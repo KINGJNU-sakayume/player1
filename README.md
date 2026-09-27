@@ -1,5 +1,8 @@
 # ARC Music — Catalogue
 
+[![CI](https://github.com/KINGJNU-sakayume/player1/actions/workflows/ci.yml/badge.svg)](https://github.com/KINGJNU-sakayume/player1/actions/workflows/ci.yml)
+[![Deploy to GitHub Pages](https://github.com/KINGJNU-sakayume/player1/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/KINGJNU-sakayume/player1/actions/workflows/deploy-pages.yml)
+
 A personal Spotify player designed as an editorial record catalogue: a neutral paper page, large multilingual
 type, and one album at a time. It implements the **Catalogue version** described in
 [`docs/handoff/`](docs/handoff/) — no Specimen Book, no design or palette labs.
@@ -14,12 +17,19 @@ type, and one album at a time. It implements the **Catalogue version** described
 | **Queue** | A drawer with the current item and what plays next. |
 
 **Contents** — [Quick start](#quick-start) · [Spotify app configuration](#spotify-app-configuration) ·
-[Environment variables](#environment-variables) · [Commands](#commands) · [Build and deploy](#build-and-deploy) ·
+[Environment variables](#environment-variables) · [Commands](#commands) ·
+[GitHub Actions: CI and deployment](#github-actions-ci-and-deployment) ·
 [Lyrics and translation providers](#lyrics-and-translation-providers) · [Editorial overrides](#editorial-overrides) ·
 [Album colour](#album-colour) · [Preview mode](#preview-mode) · [Architecture](#architecture) ·
 [Known limitations](#known-limitations)
 
 ## Quick start
+
+**On GitHub Pages.** After the [one-time setup](#one-time-setup), every push to `main` builds and deploys the app to
+**https://kingjnu-sakayume.github.io/player1/** — open it and choose **Connect Spotify**. Nothing needs to be
+installed.
+
+**Locally**, for development:
 
 ```bash
 npm ci
@@ -48,13 +58,15 @@ Premium, and audio in the browser also needs protected-media (EME) support — s
    | --- | --- |
    | `npm run dev` | `http://127.0.0.1:5173/callback` |
    | `npm run preview` (local production build) | `http://127.0.0.1:4173/callback` |
-   | GitHub Pages | `https://<user>.github.io/player1/callback` |
+   | GitHub Pages (this repository) | `https://kingjnu-sakayume.github.io/player1/callback` |
+   | GitHub Pages (a fork) | `https://<owner in lower case>.github.io/<repository>/callback` |
    | Any other host | `https://<your-domain><base-path>callback` |
 
    Plain `http` is accepted only for loopback addresses; deployed sites must use `https`. When
    `VITE_SPOTIFY_REDIRECT_URI` is empty, the app uses the address it is served from (origin + base path +
    `callback`); `.env.example` pins the dev address, so change or clear it before building for another address.
-4. Copy the **Client ID** into `.env.local` as `VITE_SPOTIFY_CLIENT_ID`. Do **not** copy the client secret anywhere:
+4. Copy the **Client ID** into `.env.local` as `VITE_SPOTIFY_CLIENT_ID` (locally) and into the repository variable of
+   the same name (GitHub Pages — see [one-time setup](#one-time-setup)). Do **not** copy the client secret anywhere:
    the app uses the Authorization Code flow with PKCE, which needs no secret, and every `VITE_*` value is published
    in the JavaScript bundle.
 5. While the app is in **Development Mode**, add the Spotify account of everyone who will use it under
@@ -93,7 +105,8 @@ reconnect; everything that does not need the missing scope keeps working.
 
 ## Environment variables
 
-Copy [`.env.example`](.env.example) to `.env.local` (git-ignored). Every value is compiled into the public bundle, so
+Locally, copy [`.env.example`](.env.example) to `.env.local` (git-ignored). For GitHub Pages, set the same names as
+repository variables instead ([one-time setup](#one-time-setup)). Every value is compiled into the public bundle, so
 none of them may be a secret.
 
 | Variable | Default | Purpose |
@@ -119,27 +132,54 @@ none of them may be a secret.
 | `npm test` | Vitest unit and integration tests (`npm run test:watch` to watch) |
 | `npm run check` | Typecheck, lint, tests and build — run this before pushing |
 
-## Build and deploy
+## GitHub Actions: CI and deployment
+
+| Workflow | Runs on | What it does |
+| --- | --- | --- |
+| [CI](.github/workflows/ci.yml) | Every pull request and every push to `main` | `npm ci`, typecheck, lint, tests, and a production build under the Pages sub-path |
+| [Deploy to GitHub Pages](.github/workflows/deploy-pages.yml) | Every push to `main`, or **Actions → Deploy to GitHub Pages → Run workflow** | Builds with the site's base path and your repository variables, then publishes `dist/` to GitHub Pages |
+
+Both use the Node.js version in [`.nvmrc`](.nvmrc).
+
+### One-time setup
+
+Do these in order: the Pages environment accepts deployments only from the branch that is the default when Pages is
+turned on.
+
+1. **Default branch** — Settings → General → Default branch: `main`.
+2. **Pages** — Settings → Pages → Build and deployment → Source: **GitHub Actions**.
+3. **Client ID** — Settings → Secrets and variables → Actions → **Variables** tab → **New repository variable**:
+   name `VITE_SPOTIFY_CLIENT_ID`, value your Client ID. A client ID is public by design, so it is a variable rather
+   than a secret; the client secret is never needed.
+4. **Redirect URI** — in the Spotify dashboard, add `https://kingjnu-sakayume.github.io/player1/callback`.
+5. **Deploy** — merge into `main`, or run the workflow manually. The run's summary links to the site.
+
+The other [environment variables](#environment-variables) are optional repository variables with the same names and
+defaults. Leave `VITE_SPOTIFY_REDIRECT_URI` unset — the app derives `<site URL>/callback` itself — and do not set
+`VITE_BASE_PATH`, which comes from the Pages configuration. Variables are read at build time, so run the deploy
+workflow again after changing one.
+
+### Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| **Configure Pages** fails with "Get Pages site failed" | Pages is not set to deploy from GitHub Actions — step 2. |
+| `Branch "main" is not allowed to deploy to github-pages` | Pages was turned on before `main` became the default branch. Settings → Environments → `github-pages` → Deployment branches and tags: add `main`. |
+| The site shows the **Setup** steps instead of **Connect Spotify** | `VITE_SPOTIFY_CLIENT_ID` was not set when it was built — step 3, then run the deploy again. |
+| Spotify answers `INVALID_CLIENT: Invalid redirect URI` | The URI registered in step 4 must match exactly, including `/player1/` and the lower-case owner name. |
+| Blank page with 404s for `/assets/…` | The files were built without the base path; deploy through the workflow instead of uploading a local build. |
+
+### Other hosts
 
 The app is a static single-page application: `dist/` can be served by any static host that falls back to
 `index.html` for unknown paths (needed for deep links such as `/album/<id>` and for the OAuth `/callback`). The
-build also writes `dist/404.html`, a copy of `index.html`, which gives GitHub Pages that fallback.
-
-**GitHub Pages** (`https://<user>.github.io/player1/`):
+build also writes `dist/404.html`, which gives GitHub Pages that fallback. On Netlify, Vercel, Cloudflare Pages and
+similar hosts, use the build command `npm run build`, the output directory `dist`, a rewrite of every path to
+`/index.html`, and the `VITE_*` variables in the host's build settings. A manual build for a sub-path looks like this:
 
 ```bash
-VITE_BASE_PATH=/player1/ \
-VITE_SPOTIFY_CLIENT_ID=<client id> \
-VITE_SPOTIFY_REDIRECT_URI=https://<user>.github.io/player1/callback \
-npm run build
+VITE_BASE_PATH=/player1/ VITE_SPOTIFY_CLIENT_ID=<client id> npm run build
 ```
-
-Publish `dist/` — for example from a GitHub Actions job that runs `npm ci` and the build above, then uses
-`actions/upload-pages-artifact` (with `path: dist`) and `actions/deploy-pages`, with **Settings → Pages → Source**
-set to **GitHub Actions**. Register the production redirect URI on the Spotify app first.
-
-**Netlify, Vercel, Cloudflare Pages and similar**: build command `npm run build`, output directory `dist`, and a
-rewrite of every path to `/index.html`. Set the `VITE_*` variables in the host's build settings.
 
 ## Lyrics and translation providers
 

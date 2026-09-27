@@ -93,8 +93,18 @@ export function ConnectPage() {
                   Add this Redirect URI to the app: <span className={styles.code}>{config.redirectUri}</span>
                 </li>
                 <li>
-                  Put its Client ID in <span className={styles.code}>.env.local</span> as{' '}
-                  <span className={styles.code}>VITE_SPOTIFY_CLIENT_ID</span> and restart the dev server.
+                  {import.meta.env.DEV ? (
+                    <>
+                      Put its Client ID in <span className={styles.code}>.env.local</span> as{' '}
+                      <span className={styles.code}>VITE_SPOTIFY_CLIENT_ID</span> and restart the dev server.
+                    </>
+                  ) : (
+                    <>
+                      Build with its Client ID as <span className={styles.code}>VITE_SPOTIFY_CLIENT_ID</span> — on
+                      GitHub Pages, a repository variable under Settings → Secrets and variables → Actions — then
+                      deploy again.
+                    </>
+                  )}
                 </li>
               </ol>
             </div>
