@@ -242,6 +242,10 @@ export async function skipToPrevious(client: SpotifyClient, deviceId?: string): 
   await client.post('/me/player/previous', { query: { device_id: deviceId } });
 }
 
+export async function setShuffle(client: SpotifyClient, state: boolean, deviceId?: string): Promise<void> {
+  await client.put('/me/player/shuffle', { query: { state, device_id: deviceId } });
+}
+
 export async function seekTo(client: SpotifyClient, positionMs: number, deviceId?: string): Promise<void> {
   await client.put('/me/player/seek', {
     query: { position_ms: Math.max(0, Math.round(positionMs)), device_id: deviceId },

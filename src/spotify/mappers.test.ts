@@ -121,6 +121,7 @@ describe('Spotify → domain mappers', () => {
     expect(mapDisallows({ resuming: true }).resuming).toBe(true);
     expect(mapDisallows({ disallows: { skipping_prev: true } }).skippingPrev).toBe(true);
     expect(mapDisallows(undefined).pausing).toBe(false);
+    expect(mapDisallows({ disallows: { toggling_shuffle: true } }).togglingShuffle).toBe(true);
   });
 
   it('maps GET /me/player into a remote snapshot', () => {
@@ -137,6 +138,8 @@ describe('Spotify → domain mappers', () => {
     };
     const snapshot = mapRemotePlayback(state, 'browser-device', 500);
     expect(snapshot).toMatchObject({ source: 'remote', paused: false, positionMs: 64_000, sampledAt: 500, volume: 0.7 });
+    expect(snapshot.shuffle).toBe(false);
+    expect(mapRemotePlayback({ ...state, shuffle_state: true }, 'browser-device', 500).shuffle).toBe(true);
     expect(mapRemotePlayback({ ...state, device: { ...state.device, id: 'browser-device' } }, 'browser-device', 0).source).toBe('sdk');
   });
 });

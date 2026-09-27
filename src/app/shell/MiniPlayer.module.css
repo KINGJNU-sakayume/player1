@@ -44,6 +44,10 @@
   color: var(--muted);
 }
 
+.artist.failed {
+  color: var(--alert);
+}
+
 .link:hover .title {
   text-decoration: underline;
   text-underline-offset: 0.2em;

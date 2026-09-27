@@ -52,7 +52,7 @@
   margin-top: var(--space-2);
 }
 
-/* Selected releases: exhibited at a restrained size. */
+/* Discography: every release exhibited at a restrained size. */
 .releases {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -92,77 +92,6 @@
 .releaseMeta {
   font-size: var(--text-small);
   color: var(--muted);
-}
-
-/* Discography index */
-.table {
-  display: grid;
-}
-
-.entry {
-  position: relative;
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 140px 90px;
-  gap: 16px;
-  align-items: baseline;
-  padding: 14px 8px 14px 4px;
-  border-bottom: 1px solid var(--line-2);
-  font-size: var(--text-body-2);
-  transition: background-color var(--dur-fast) var(--ease);
-}
-
-.entry:hover,
-.entry:focus-within {
-  background: var(--line-2);
-}
-
-.entryYear,
-.entryType,
-.entryTracks {
-  font-size: var(--text-small);
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.entryTracks {
-  text-align: right;
-}
-
-.entryTitle {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.entryTitle::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-}
-
-.entryTitle:focus-visible {
-  outline: none;
-}
-
-.entryTitle:focus-visible::after {
-  outline: 2px solid var(--focus);
-  outline-offset: -2px;
-}
-
-.columnLabels {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 140px 90px;
-  gap: 16px;
-  padding: 0 8px 10px 4px;
-  border-bottom: 1px solid var(--line);
-  font-size: var(--text-micro);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.columnLabels span:last-child {
-  text-align: right;
 }
 
 .portraitPlaceholder {

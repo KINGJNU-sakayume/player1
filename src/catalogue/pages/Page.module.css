@@ -1,8 +1,7 @@
-/* Shared layout for scrollable catalogue pages (Home, Search, Artist, Album). */
+/* Shared layout for scrollable catalogue pages (Home, Search, Artist, Album): the full width beside the rail. */
 
 .page {
   width: 100%;
-  max-width: var(--content-max);
   padding: clamp(28px, 4.6vh, 56px) var(--page-gutter) var(--space-8);
 }
 

@@ -1,4 +1,3 @@
-import { isSpotifyId } from '../../lib/spotifyUri';
 import { albumEditorial } from './albums';
 import { artistEditorial } from './artists';
 import type { AlbumEditorial, ArtistEditorial } from './types';
@@ -19,10 +18,7 @@ export function getArtistEditorial(
   const entry = source[artistId];
   if (!entry) return null;
   const bio = cleanParagraphs(entry.bio);
-  const featuredReleaseIds = (entry.featuredReleaseIds ?? []).filter(isSpotifyId);
-  const featuredReleaseTitles = cleanParagraphs(entry.featuredReleaseTitles);
-  if (bio.length === 0 && featuredReleaseIds.length === 0 && featuredReleaseTitles.length === 0) return null;
-  return { ...entry, bio, featuredReleaseIds, featuredReleaseTitles };
+  return bio.length > 0 ? { ...entry, bio } : null;
 }
 
 export function getAlbumEditorial(
