@@ -9,8 +9,8 @@ type, and one album at a time. It implements the **Catalogue version** described
 
 | Screen | What it does |
 | --- | --- |
-| **Now Playing** | One viewport, no page scroll. Cover with title, artist and album on the left; synced lyrics on the right with the current line, its translation and the next two lines. Controls sit in the composition: previous / play / next, seek, times, volume, queue, like, translation toggle and device picker. |
-| **Home** | Recently played, saved albums and your playlists. |
+| **Now Playing** | One viewport, no page scroll. Cover with title, artist and album on the left; synced lyrics on the right with the line just sung, the current line (sized to fill the column, wrapping at word / phrase boundaries), its translation and the next three lines. The whole screen takes on the colour of the album cover. Controls sit in the composition: previous / play / next, seek, times, volume, queue, like, translation toggle and device picker. |
+| **Home** | Liked songs and followed artists first, then liked (saved) albums; playlists and recently played in a quieter band at the end. |
 | **Album** | Cover, title, artist, release facts and description on the left; the complete track sequence on the right. |
 | **Artist** | Portrait and biography side by side, then selected releases and a compact discography. Editorial overrides for Vaundy, Tyler, The Creator and tripleS; every other artist renders cleanly from Spotify data alone. |
 | **Search** | Tracks, artists, albums and playlists, driven by the URL and navigable from the keyboard. |
@@ -86,7 +86,8 @@ The app requests exactly these scopes. They are declared, each with the feature 
 | `user-modify-playback-state` | Play, pause, skip, seek, volume and device transfer |
 | `user-read-currently-playing` | Reading the queue |
 | `user-read-recently-played` | Home — recently played |
-| `user-library-read` | Home — saved albums; liked / saved state |
+| `user-library-read` | Home — liked songs and saved albums; liked / saved state |
+| `user-follow-read` | Home — artists you follow |
 | `user-library-modify` | Liking the current track, saving albums |
 | `playlist-read-private` | Home — your private playlists |
 | `playlist-read-collaborative` | Home — collaborative playlists you belong to |
@@ -295,9 +296,14 @@ design is used.
 
 `PALETTE_ROLE_MAP` in [`mapPaletteToTokens.ts`](src/catalogue/palette/mapPaletteToTokens.ts) is the only place that
 decides where album colour appears. By default the **dominant** colour drives `--active` (progress, active
-navigation, current-track and selected markers) and `--cover-shadow`. Page surface, text, lyrics and separators always
-stay neutral; secondary, accent, light and dark are extracted but reserved. Change the map to re-theme without
-touching any page.
+navigation, current-track and selected markers) and `--cover-shadow`. On every page but Now Playing, surface, text,
+lyrics and separators stay neutral. Change the map to re-theme without touching any page.
+
+**Now Playing surface.** [`stageTheme.ts`](src/catalogue/palette/stageTheme.ts) turns the cover palette into a full
+theme for the Now Playing screen: a surface in the cover's hue (pale with dark ink for light covers, deep with light
+ink otherwise), a soft glow, and ink, muted text, lines and accent re-derived for that surface with the same contrast
+targets (ink ≥ 10:1, secondary text ≥ 4.5:1, marks ≥ 3:1). The tokens are set on the app shell only while Now
+Playing is open and fade between albums; leaving the screen fades back to the neutral page.
 
 ## Preview mode
 

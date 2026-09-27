@@ -1,7 +1,48 @@
 .app {
+  --stage-fade: 700ms;
   display: grid;
   grid-template-columns: var(--rail-width) minmax(0, 1fr);
   min-height: 100dvh;
+  background:
+    radial-gradient(90% 70% at 12% 8%, var(--stage-glow), transparent 70%),
+    radial-gradient(70% 60% at 100% 100%, color-mix(in srgb, var(--stage-glow) 55%, transparent), transparent 70%),
+    var(--bg);
+  color: var(--ink);
+  transition:
+    --bg var(--stage-fade) var(--ease),
+    --paper var(--stage-fade) var(--ease),
+    --surface var(--stage-fade) var(--ease),
+    --surface-strong var(--stage-fade) var(--ease),
+    --ink var(--stage-fade) var(--ease),
+    --ink-2 var(--stage-fade) var(--ease),
+    --muted var(--stage-fade) var(--ease),
+    --subtle var(--stage-fade) var(--ease),
+    --faint var(--stage-fade) var(--ease),
+    --line var(--stage-fade) var(--ease),
+    --line-2 var(--stage-fade) var(--ease),
+    --line-strong var(--stage-fade) var(--ease),
+    --active var(--stage-fade) var(--ease),
+    --active-text var(--stage-fade) var(--ease),
+    --active-soft var(--stage-fade) var(--ease),
+    --on-active var(--stage-fade) var(--ease),
+    --cover-shadow var(--stage-fade) var(--ease),
+    --stage-glow var(--stage-fade) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app {
+    --stage-fade: 0ms;
+  }
+}
+
+.app[data-stage='dark'] {
+  color-scheme: dark;
+}
+
+/* On the album-coloured surface the chrome is transparent so the colour reads as one field. */
+.app[data-stage] .rail,
+.app[data-stage] .topbar {
+  background: transparent;
 }
 
 /* Now Playing is exactly one viewport high on desktop: no page-level scroll. */
@@ -47,12 +88,14 @@
   display: grid;
   place-items: center;
   align-self: center;
-  width: 46px;
-  height: 54px;
-  border: 1px solid var(--line-strong);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  transition: transform var(--dur) var(--ease);
+}
+
+a.logo:hover {
+  transform: rotate(-24deg);
 }
 
 .nav {

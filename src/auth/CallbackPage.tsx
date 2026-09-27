@@ -4,6 +4,7 @@ import { useAppServices } from '../app/appContext';
 import { ButtonLink } from '../catalogue/components/Button';
 import { LoadingLine, StatePanel } from '../catalogue/components/StatePanel';
 import { SpotifyAuthError, type SpotifyAuth } from './authService';
+import { Logo } from '../catalogue/components/Logo';
 import styles from './ConnectPage.module.css';
 
 // The authorization code is single-use; React StrictMode runs effects twice.
@@ -46,7 +47,7 @@ export function CallbackPage() {
     <div className={styles.page}>
       <div className={styles.rail}>
         <span className={styles.logo} aria-hidden="true">
-          ARC
+          <Logo size={40} />
         </span>
       </div>
       <main className={styles.content} id="main">

@@ -4,7 +4,9 @@ import { normaliseTitle, type CatalogueSource, type PageRequest } from '../catal
 import {
   PREVIEW_ALBUMS,
   PREVIEW_ARTISTS,
+  PREVIEW_FOLLOWED_ARTIST_IDS,
   PREVIEW_INITIALLY_SAVED_URIS,
+  PREVIEW_LIKED_TRACK_URIS,
   PREVIEW_PLAYLISTS,
   PREVIEW_RECENTLY_PLAYED,
   PREVIEW_SAVED_ALBUM_IDS,
@@ -64,6 +66,8 @@ function matches(query: string, ...fields: string[]): boolean {
 export function createPreviewCatalogueSource(now: () => number = Date.now): CatalogueSource {
   const createdAt = now();
   const saved = new Set(PREVIEW_INITIALLY_SAVED_URIS.concat(PREVIEW_SAVED_ALBUM_IDS.map((id) => `spotify:album:${id}`)));
+  // Newest like first, as Spotify orders Liked Songs.
+  let likedOrder = [...PREVIEW_LIKED_TRACK_URIS];
 
   return {
     mode: 'preview',
@@ -81,6 +85,32 @@ export function createPreviewCatalogueSource(now: () => number = Date.now): Cata
         ];
       });
       return delay(items, signal);
+    },
+
+    getLikedTracks(request, signal) {
+      const tracks = likedOrder.filter((u) => saved.has(u)).flatMap((u) => {
+        const track = PREVIEW_TRACKS.find((t) => t.uri === u);
+        return track ? [track] : [];
+      });
+      return delay(page(tracks, request), signal);
+    },
+
+    getFollowedArtists(after, limit, signal) {
+      const artists = PREVIEW_FOLLOWED_ARTIST_IDS.flatMap((id) => {
+        const artist = previewArtist(id);
+        return artist ? [{ id: artist.id, uri: artist.uri, name: artist.name, images: artist.images }] : [];
+      });
+      const offset = after ? artists.findIndex((a) => a.id === after) + 1 : 0;
+      const items = artists.slice(offset, offset + limit);
+      const last = items.at(-1);
+      return delay(
+        {
+          items,
+          total: artists.length,
+          nextCursor: last && offset + items.length < artists.length ? last.id : null,
+        },
+        signal,
+      );
     },
 
     getSavedAlbums(request, signal) {
@@ -177,6 +207,7 @@ export function createPreviewCatalogueSource(now: () => number = Date.now): Cata
       for (const u of uris) {
         if (value) saved.add(u);
         else saved.delete(u);
+        if (value && u.startsWith('spotify:track:')) likedOrder = [u, ...likedOrder.filter((x) => x !== u)];
       }
       await delay(undefined);
     },

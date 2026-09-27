@@ -27,6 +27,78 @@
   initial-value: rgba(23, 25, 23, 0.16);
 }
 
+/* Surface and ink: registered so the album-coloured Now Playing surface fades in and out. */
+@property --bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f1eee6;
+}
+@property --paper {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f8f5ee;
+}
+@property --surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #e7e2d8;
+}
+@property --surface-strong {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #dcd6ca;
+}
+@property --ink {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #171917;
+}
+@property --ink-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #4a4d47;
+}
+@property --muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #5e615a;
+}
+@property --subtle {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #6b6d67;
+}
+@property --faint {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #969991;
+}
+@property --line {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(23, 25, 23, 0.16);
+}
+@property --line-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(23, 25, 23, 0.08);
+}
+@property --line-strong {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(23, 25, 23, 0.32);
+}
+@property --on-active {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f8f5ee;
+}
+@property --stage-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
 :root {
   /* Surfaces (must match NEUTRAL_BASE in mapPaletteToTokens.ts) */
   --bg: #f1eee6;
@@ -52,6 +124,8 @@
   --on-active: #f8f5ee;
   --active-soft: rgba(23, 25, 23, 0.07);
   --cover-shadow: rgba(23, 25, 23, 0.16);
+  /* Now Playing only: soft light from the cover's secondary colour. */
+  --stage-glow: transparent;
 
   --focus: #171917;
   --alert: #8f2a1c;

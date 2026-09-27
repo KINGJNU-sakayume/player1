@@ -1,6 +1,6 @@
 .stage {
-  --gap: clamp(32px, 4.6vw, 88px);
-  --object-share: 0.44;
+  --gap: clamp(32px, 4.4vw, 88px);
+  --object-share: 0.4;
   /* Title (≤ 2 lines at display size) + byline + spacing kept below the cover. */
   --meta-reserve: 188px;
   container-type: size;
@@ -15,7 +15,7 @@
 /* Narrower desktop: give the lyrics more room by reducing the cover first. */
 @media (max-width: 1200px) {
   .stage {
-    --object-share: 0.39;
+    --object-share: 0.36;
   }
 }
 
@@ -38,8 +38,8 @@
   }
 
   .reading {
-    height: min(100%, 1040px);
-    max-width: 1080px;
+    height: min(100%, 1120px);
+    max-width: 1320px;
   }
 }
 
@@ -89,8 +89,8 @@
   gap: 18px;
   align-self: center;
   width: 100%;
-  max-width: 980px;
-  height: min(100%, 880px);
+  max-width: 1180px;
+  height: 100%;
   min-height: 0;
 }
 

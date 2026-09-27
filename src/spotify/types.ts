@@ -150,6 +150,16 @@ export interface SpotifySavedAlbum {
   album: SpotifyAlbum;
 }
 
+export interface SpotifySavedTrack {
+  added_at: string;
+  track: SpotifyTrack | null;
+}
+
+/** GET /me/following?type=artist wraps its cursor page in `artists`. */
+export interface SpotifyFollowedArtists {
+  artists: SpotifyCursorPaging<SpotifyArtist | null>;
+}
+
 export interface SpotifyPlaylistItemsRef {
   href: string;
   total: number;

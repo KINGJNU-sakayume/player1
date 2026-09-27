@@ -1,19 +1,14 @@
 import { useEffect } from 'react';
 import { mapPaletteToTokens } from '../../catalogue/palette/mapPaletteToTokens';
-import { useAlbumPalette } from '../../catalogue/palette/usePalette';
-import { pickImageUrl } from '../../lib/images';
-import { usePlayerSelector } from '../../playback/hooks';
+import { useNowPlayingPalette } from './useNowPlayingTheme';
 
 /**
  * Applies the now-playing album's palette to the document as the small set of
- * --active* / --cover-shadow tokens. Everything else stays neutral.
+ * --active* / --cover-shadow tokens. The Now Playing screen additionally takes
+ * the full album-coloured surface (see useStageTheme in AppShell).
  */
 export function PaletteTokens() {
-  const track = usePlayerSelector((state) => state.snapshot.track);
-  const albumId = track?.album.id || null;
-  // A 64 px image is plenty for a 48 px sample and keeps extraction cheap.
-  const imageUrl = track ? pickImageUrl(track.album.images, 64) : null;
-  const palette = useAlbumPalette(albumId, imageUrl);
+  const palette = useNowPlayingPalette();
 
   useEffect(() => {
     const tokens = mapPaletteToTokens(palette);

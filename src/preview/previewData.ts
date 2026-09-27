@@ -402,7 +402,25 @@ export const PREVIEW_SAVED_ALBUM_IDS = [
   '2X2nKgBuusDa4VqLI6hMU2',
 ];
 
-export const PREVIEW_INITIALLY_SAVED_URIS = [uri('5hVghJ4KaYES3BFUATCYn0'), uri(pv('FlowerBoy', 4))];
+/** Liked Songs, most recently liked first. */
+export const PREVIEW_LIKED_TRACK_URIS = [
+  uri('5hVghJ4KaYES3BFUATCYn0'),
+  uri('3kQf453SpkwX7ALdgzNSNY'),
+  uri(pv('FlowerBoy', 4)),
+  uri('45OflED18VsURGw2z0Y6Cv'),
+  uri(pv('Igor', 3)),
+  uri(pv('TestPress', 1)),
+  uri(pv('Cmiygl', 4)),
+  uri(pv('Igor', 6)),
+  uri(pv('TestPress', 4)),
+  uri(pv('FlowerBoy', 8)),
+  uri(pv('Cmiygl', 2)),
+  uri(pv('TestPress', 6)),
+];
+
+export const PREVIEW_INITIALLY_SAVED_URIS = [...PREVIEW_LIKED_TRACK_URIS];
+
+export const PREVIEW_FOLLOWED_ARTIST_IDS = [TYLER, VAUNDY, TRIPLES, ENSEMBLE];
 
 /* ── Palettes from the handoff seed data ────────────────────────────────── */
 

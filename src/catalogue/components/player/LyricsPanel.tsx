@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { useSession } from '../../../app/sessionContext';
 import type { TrackIdentity } from '../../../domain/types';
 import type { TimedLyricLine } from '../../../lyrics/types';
@@ -12,21 +12,25 @@ import { LoadingLine } from '../StatePanel';
 import { Icon } from '../Icon';
 import styles from './LyricsPanel.module.css';
 
+const UPCOMING_LINES = 3;
+
 const LANGUAGE_NAMES: Record<string, string> = { ko: 'Korean', ja: 'Japanese', en: 'English', zh: 'Chinese' };
 
 function languageName(tag: string): string {
   return LANGUAGE_NAMES[tag.split('-')[0]!.toLowerCase()] ?? tag;
 }
 
-const WIDE = /[ᄀ-ᇿ⺀-鿿가-힯豈-﫿＀-￯]/u;
+const WIDE = /[ᄀ-ᇿ⺀-鿿가-힯豈-﫿＀-￯]/u;
 
-/** Long lines step down in size so the current lyric is never clipped. */
-function sizeClass(text: string): 'regular' | 'long' | 'xlong' {
+/**
+ * Approximate rendered width of a line in ems (full-width characters ≈ 1em,
+ * Latin ≈ 0.55em). The stylesheet divides the column width by this to size
+ * the current line so it fills the column in about two lines.
+ */
+function lineUnits(text: string): number {
   let units = 0;
   for (const char of text) units += WIDE.test(char) ? 1 : 0.55;
-  if (units > 46) return 'xlong';
-  if (units > 28) return 'long';
-  return 'regular';
+  return Math.max(units, 1);
 }
 
 function TranslationStatus({
@@ -65,8 +69,9 @@ function TranslationStatus({
 
 /**
  * Synchronised lyrics: the current line is the dominant typographic element,
- * its translation sits directly beneath, and the next two lines follow at
- * reduced emphasis. The active line comes from the central playback clock.
+ * sized to fill the column; its translation sits directly beneath, the line
+ * just sung fades above and the next three lines follow at reduced emphasis.
+ * The active line comes from the central playback clock.
  */
 export function LyricsPanel({ track }: { track: TrackIdentity }) {
   const lyricsState = useTimedLyrics(track);
@@ -89,7 +94,10 @@ export function LyricsPanel({ track }: { track: TrackIdentity }) {
   const source =
     lyricsState.status === 'ready' ? lyrics?.source : lyricsState.status === 'instrumental' ? lyricsState.source : null;
   const current = lines && activeIndex >= 0 ? lines[activeIndex]! : null;
-  const upcoming = lines ? lines.slice(nextIndex, nextIndex + 2) : [];
+  const upcoming = lines ? lines.slice(nextIndex, nextIndex + UPCOMING_LINES) : [];
+  // The line just sung stays above the current one, faded, for continuity.
+  const previousIndex = activeIndex >= 0 ? activeIndex - 1 : nextIndex - 1;
+  const previous = lines && previousIndex >= 0 ? lines[previousIndex]! : null;
   const translated =
     translation.status === 'ready' && activeIndex >= 0 ? (translation.lines[activeIndex] ?? '').trim() : '';
 
@@ -156,12 +164,17 @@ export function LyricsPanel({ track }: { track: TrackIdentity }) {
 
         {lines && (
           <>
+            {previous && previous.text.trim() && (
+              <p key={`prev-${previousIndex}`} className={styles.previous} lang={lineLanguages[previousIndex]} aria-hidden="true">
+                {previous.text}
+              </p>
+            )}
             {current ? (
               <p
                 key={`line-${activeIndex}`}
                 className={styles.current}
                 lang={lineLanguages[activeIndex]}
-                data-size={sizeClass(current.text)}
+                style={{ '--units': lineUnits(current.text).toFixed(1) } as CSSProperties}
               >
                 {current.text}
               </p>

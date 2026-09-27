@@ -83,44 +83,70 @@
 /* ── Reading area ─────────────────────────────────────────────────────── */
 
 .body {
+  /* Sizes below are relative to the lyric column (cqi) and the stage height (cqb). */
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   justify-content: safe center;
   min-height: 0;
-  padding: clamp(16px, 3vh, 36px) 0;
+  padding: clamp(12px, 2.4vh, 32px) 0;
   overflow: hidden;
 }
 
+/* Natural line breaks: never split inside a word; Korean keeps words whole
+   (base.css), Japanese breaks between phrases where the browser supports it. */
+.previous,
+.current,
+.translation,
+.upcoming li {
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  line-break: strict;
+  hyphens: manual;
+}
+
+.previous:lang(ja),
+.current:lang(ja),
+.upcoming li:lang(ja) {
+  word-break: auto-phrase;
+}
+
+.previous {
+  margin-bottom: clamp(14px, 2.6vh, 28px);
+  font-size: clamp(18px, 3cqi, 30px);
+  line-height: 1.3;
+  color: var(--faint);
+  text-wrap: pretty;
+  animation: fade-in var(--dur-slow) var(--ease) both;
+}
+
+/*
+ * The current line fills the column: its size is the column width divided by
+ * the line's estimated width in ems (--units, set per line), so short lines
+ * are set large and long ones wrap into about two balanced lines. Bounded by
+ * the stage height so it never crowds the controls.
+ */
 .current {
-  font-size: var(--text-lyric);
+  --fit: calc(100cqi * 1.8 / var(--units, 20));
+  font-size: clamp(34px, min(var(--fit), 10cqb, 108px), 108px);
   font-weight: 500;
-  line-height: 1.07;
+  line-height: 1.08;
   letter-spacing: -0.035em;
   color: var(--ink);
-  white-space: pre-line;
   text-wrap: balance;
-  overflow-wrap: anywhere;
   animation: lyric-in var(--dur-slow) var(--ease) both;
 }
 
 .current:lang(ja),
 .current:lang(ko),
 .current:lang(zh) {
-  line-height: 1.2;
+  line-height: 1.22;
   letter-spacing: -0.01em;
-}
-
-.current[data-size='long'] {
-  font-size: calc(var(--text-lyric) * 0.8);
-}
-
-.current[data-size='xlong'] {
-  font-size: calc(var(--text-lyric) * 0.66);
 }
 
 /* Instrumental gap or intro: a quiet marker instead of a lyric. */
 .gap {
-  font-size: var(--text-lyric);
+  font-size: clamp(40px, 8cqi, 88px);
   line-height: 1.07;
   letter-spacing: 0.3em;
   color: var(--faint);
@@ -128,30 +154,36 @@
 }
 
 .translation {
-  margin-top: 18px;
-  font-size: var(--text-strong);
-  line-height: 1.45;
+  margin-top: clamp(12px, 2vh, 22px);
+  font-size: clamp(18px, 3.1cqi, 32px);
+  line-height: 1.4;
   color: var(--ink-2);
-  white-space: pre-line;
+  text-wrap: pretty;
   animation: fade-in var(--dur-slow) var(--ease) 60ms both;
 }
 
 .upcoming {
   display: grid;
-  gap: 12px;
-  margin-top: clamp(20px, 3.4vh, 36px);
+  gap: clamp(8px, 1.6vh, 16px);
+  margin-top: clamp(20px, 3.6vh, 40px);
 }
 
 .upcoming li {
-  font-size: var(--text-upcoming);
-  line-height: 1.35;
+  font-size: clamp(20px, 3.4cqi, 36px);
+  font-weight: 450;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   color: var(--muted);
-  white-space: pre-line;
+  text-wrap: pretty;
   animation: fade-in var(--dur-slow) var(--ease) both;
 }
 
 .upcoming li + li {
   color: var(--subtle);
+}
+
+.upcoming li + li + li {
+  color: var(--faint);
 }
 
 @keyframes lyric-in {
