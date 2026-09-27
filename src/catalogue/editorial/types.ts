@@ -12,10 +12,6 @@ export interface ArtistEditorial {
   language?: string;
   /** Short biography paragraphs. */
   bio?: string[];
-  /** Spotify album IDs to exhibit as "Selected releases", in order. */
-  featuredReleaseIds?: string[];
-  /** Fallback when an ID is unknown or changes: matched against the artist's discography by title. */
-  featuredReleaseTitles?: string[];
 }
 
 export interface AlbumEditorial {

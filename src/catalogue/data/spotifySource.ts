@@ -1,4 +1,4 @@
-import type { AlbumSummary, SearchResults } from '../../domain/types';
+import type { SearchResults } from '../../domain/types';
 import type { SpotifyClient } from '../../spotify/client';
 import * as api from '../../spotify/endpoints';
 import {
@@ -14,7 +14,6 @@ import {
 import type { SpotifySimplifiedTrack } from '../../spotify/types';
 import {
   dedupeRecentlyPlayed,
-  normaliseTitle,
   type CatalogueSource,
   type PageRequest,
   type SearchRequest,
@@ -22,7 +21,6 @@ import {
 
 const RELEASE_GROUPS = 'album,single,compilation';
 const MAX_ALBUM_TRACK_PAGES = 40;
-const MAX_TITLE_SEARCH_PAGES = 8;
 
 export function createSpotifyCatalogueSource(client: SpotifyClient): CatalogueSource {
   return {
@@ -83,35 +81,6 @@ export function createSpotifyCatalogueSource(client: SpotifyClient): CatalogueSo
         signal,
       );
       return mapPage(result, mapAlbumSummary);
-    },
-
-    async getAlbumSummaries(ids, signal) {
-      // GET /albums?ids= is unavailable to Development Mode apps; fetch individually.
-      const results = await Promise.allSettled(ids.map((id) => api.getAlbum(client, id, signal)));
-      return results.flatMap((r) => (r.status === 'fulfilled' ? [mapAlbumSummary(r.value)] : []));
-    },
-
-    async findArtistReleasesByTitle(artistId, titles, signal) {
-      const wanted = new Map(titles.map((title) => [normaliseTitle(title), title]));
-      const found = new Map<string, AlbumSummary>();
-      for (let page = 0; page < MAX_TITLE_SEARCH_PAGES && found.size < wanted.size; page += 1) {
-        const result = await api.getArtistAlbums(
-          client,
-          artistId,
-          { includeGroups: RELEASE_GROUPS, limit: api.LIMITS.artistAlbums, offset: page * api.LIMITS.artistAlbums },
-          signal,
-        );
-        for (const album of result.items) {
-          const key = normaliseTitle(album.name);
-          if (wanted.has(key) && !found.has(key)) found.set(key, mapAlbumSummary(album));
-        }
-        if (!result.next) break;
-      }
-      // Preserve the editorial order.
-      return titles.flatMap((title) => {
-        const album = found.get(normaliseTitle(title));
-        return album ? [album] : [];
-      });
     },
 
     async search(request: SearchRequest, signal): Promise<SearchResults> {

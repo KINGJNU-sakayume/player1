@@ -11,20 +11,10 @@ import { Button, ButtonLink } from '../components/Button';
 import { Cover, Portrait } from '../components/Cover';
 import { SectionHeader } from '../components/SectionHeader';
 import { LoadingLine, StatePanel } from '../components/StatePanel';
-import { useArtist, useArtistReleases, useFeaturedReleases } from '../data/queries';
+import { useArtist, useArtistReleases } from '../data/queries';
 import { getArtistEditorial } from '../editorial/lookup';
 import styles from './ArtistPage.module.css';
 import page from './Page.module.css';
-
-const SELECTED_COUNT = 4;
-
-/** Without an editorial selection, exhibit the most recent full albums, then other releases. */
-function defaultSelection(releases: AlbumSummary[]): AlbumSummary[] {
-  const byDate = [...releases].sort((a, b) => (b.releaseDate ?? '').localeCompare(a.releaseDate ?? ''));
-  const albums = byDate.filter((r) => r.albumType === 'album');
-  const others = byDate.filter((r) => r.albumType !== 'album');
-  return [...albums, ...others].slice(0, SELECTED_COUNT);
-}
 
 function ReleaseObject({ release }: { release: AlbumSummary }) {
   const year = releaseYear(release.releaseDate);
@@ -73,24 +63,11 @@ function Discography({ artistId }: { artistId: string }) {
         </StatePanel>
       ) : (
         <>
-          <div className={styles.columnLabels} aria-hidden="true">
-            <span>Year</span>
-            <span>Title</span>
-            <span>Type</span>
-            <span>Tracks</span>
-          </div>
-          <ol className={styles.table}>
+          <ul className={styles.releases}>
             {items.map((release) => (
-              <li key={release.id} className={styles.entry}>
-                <span className={styles.entryYear}>{releaseYear(release.releaseDate) ?? '—'}</span>
-                <Link className={styles.entryTitle} to={`/album/${release.id}`} lang={detectLineLanguage(release.name)}>
-                  {release.name}
-                </Link>
-                <span className={styles.entryType}>{albumTypeLabel(release.albumType)}</span>
-                <span className={styles.entryTracks}>{release.totalTracks ?? '—'}</span>
-              </li>
+              <ReleaseObject key={release.id} release={release} />
             ))}
-          </ol>
+          </ul>
           {releases.hasNextPage && (
             <div className={page.more}>
               <Button onClick={() => void releases.fetchNextPage()} disabled={releases.isFetchingNextPage}>
@@ -108,7 +85,6 @@ export function ArtistPage() {
   const { artistId } = useParams();
   const artist = useArtist(artistId);
   const editorial = getArtistEditorial(artistId);
-  const featured = useFeaturedReleases(artistId, editorial);
   const releases = useArtistReleases(artistId);
   const play = usePlay();
   const { mode } = useSession();
@@ -161,11 +137,6 @@ export function ArtistPage() {
 
   const data = artist.data;
   const firstPage = releases.data?.pages[0];
-  const hasEditorialSelection = Boolean(editorial?.featuredReleaseIds?.length || editorial?.featuredReleaseTitles?.length);
-  const selection = hasEditorialSelection
-    ? (featured.data ?? [])
-    : defaultSelection(firstPage?.items ?? []);
-  const selectionPending = hasEditorialSelection ? featured.isPending : releases.isPending;
   // Deprecated fields are shown only when Spotify still returns them.
   const facts = [
     firstPage ? pluralise(firstPage.total, 'release') : null,
@@ -210,23 +181,6 @@ export function ArtistPage() {
             </div>
           </div>
         </header>
-
-        <section className={page.section} aria-labelledby="selected-title">
-          <SectionHeader id="selected-title" title="Selected releases" />
-          {selectionPending ? (
-            <LoadingLine label="Loading releases…" />
-          ) : selection.length === 0 ? (
-            <StatePanel size="compact" title="No releases to show">
-              <p>Spotify returned no releases for this selection.</p>
-            </StatePanel>
-          ) : (
-            <ul className={styles.releases}>
-              {selection.map((release) => (
-                <ReleaseObject key={release.id} release={release} />
-              ))}
-            </ul>
-          )}
-        </section>
 
         <Discography artistId={data.id} />
       </article>

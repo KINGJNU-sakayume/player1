@@ -21,7 +21,7 @@ release, run the [real-account pass](#real-account-pass) at the end of this docu
 | No Specimen Book route, component, tab or production control | Met | Routes are Home, Search, Now Playing, Album, Artist, `/callback` and a 404 page ([`SessionRoot.tsx`](../src/app/SessionRoot.tsx)). No Specimen code exists. |
 | No Curatorial Note on Now Playing | Met | Now Playing shows cover, identity, lyrics and controls only. |
 | No palette / type design-lab UI | Met | Palette use is code-only (`PALETTE_ROLE_MAP`); type sizes are tokens. |
-| No prototype-only exhibition labels | Met | Headings are functional: "Recently played", "Track sequence", "Selected releases". |
+| No prototype-only exhibition labels | Met | Headings are functional: "Recently played", "Track sequence", "Discography". |
 
 ## Typography
 
@@ -53,8 +53,8 @@ release, run the [real-account pass](#real-account-pass) at the end of this docu
 | Item | Status | How |
 | --- | --- | --- |
 | Artist image and biography visually close | Met | Portrait and text share one head grid. |
-| Release covers restrained | Met | Selected releases use 120 px covers; the full discography is a compact table (year, title, type, tracks). |
-| Vaundy / Tyler / tripleS editorial overrides | Met | [`artists.ts`](../src/catalogue/editorial/artists.ts), keyed by Spotify artist ID, with featured release IDs and a title fallback ([`lookup.test.ts`](../src/catalogue/editorial/lookup.test.ts)). |
+| Release covers restrained | Met | The discography uses 120 px covers, each with year, type and track count. |
+| Vaundy / Tyler / tripleS editorial overrides | Met | [`artists.ts`](../src/catalogue/editorial/artists.ts), keyed by Spotify artist ID, with a biography ([`lookup.test.ts`](../src/catalogue/editorial/lookup.test.ts)). |
 | Non-curated artists render without editorial prose | Met | No entry means no bio block; name, image and releases come from Spotify. Checked with the non-curated preview artist and fixture artists. |
 
 ## Album

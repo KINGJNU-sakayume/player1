@@ -1,9 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '../../app/sessionContext';
-import type { AlbumSummary, SearchResults, SearchType } from '../../domain/types';
+import type { SearchResults, SearchType } from '../../domain/types';
 import { isSpotifyId } from '../../lib/spotifyUri';
-import type { ArtistEditorial } from '../editorial/types';
-import { normaliseTitle } from './CatalogueSource';
 
 const MINUTE = 60_000;
 
@@ -94,31 +92,6 @@ export function useArtistReleases(artistId: string | undefined, pageSize = 10) {
     getNextPageParam: (last) => (last.hasMore ? last.offset + last.items.length : undefined),
     enabled: isSpotifyId(artistId),
     staleTime: 30 * MINUTE,
-  });
-}
-
-const MAX_FEATURED = 5;
-
-/** Editorial "Selected releases": by ID first, then by title for anything unresolved. */
-export function useFeaturedReleases(artistId: string | undefined, editorial: ArtistEditorial | null) {
-  const { catalogue } = useSession();
-  const ids = editorial?.featuredReleaseIds ?? [];
-  const titles = editorial?.featuredReleaseTitles ?? [];
-  return useQuery({
-    queryKey: [catalogue.mode, 'featured-releases', artistId, ids, titles],
-    enabled: isSpotifyId(artistId) && (ids.length > 0 || titles.length > 0),
-    staleTime: 30 * MINUTE,
-    queryFn: async ({ signal }): Promise<AlbumSummary[]> => {
-      const byId = ids.length > 0 ? await catalogue.getAlbumSummaries(ids, signal) : [];
-      const wanted = Math.max(ids.length, titles.length);
-      if (byId.length >= wanted || titles.length === 0) return byId.slice(0, MAX_FEATURED);
-      const known = new Set(byId.map((a) => normaliseTitle(a.name)));
-      const missing = titles.filter((t) => !known.has(normaliseTitle(t)));
-      const byTitle = missing.length > 0 ? await catalogue.findArtistReleasesByTitle(artistId!, missing, signal) : [];
-      const merged = [...byId];
-      for (const album of byTitle) if (!merged.some((a) => a.id === album.id)) merged.push(album);
-      return merged.slice(0, MAX_FEATURED);
-    },
   });
 }
 

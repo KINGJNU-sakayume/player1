@@ -44,16 +44,12 @@ export interface CatalogueSource {
   getAlbum(id: string, signal?: AbortSignal): Promise<AlbumDetail>;
   getArtist(id: string, signal?: AbortSignal): Promise<ArtistDetail>;
   getArtistReleases(artistId: string, page: PageRequest, signal?: AbortSignal): Promise<Page<AlbumSummary>>;
-  /** Resolves album IDs; IDs that fail to resolve are skipped. */
-  getAlbumSummaries(ids: string[], signal?: AbortSignal): Promise<AlbumSummary[]>;
-  /** Finds releases in an artist's discography by title (editorial fallback). */
-  findArtistReleasesByTitle(artistId: string, titles: string[], signal?: AbortSignal): Promise<AlbumSummary[]>;
   search(request: SearchRequest, signal?: AbortSignal): Promise<SearchResults>;
   checkSaved(uris: string[], signal?: AbortSignal): Promise<boolean[]>;
   setSaved(uris: string[], saved: boolean): Promise<void>;
 }
 
-/** Title comparison used for editorial title fallbacks. */
+/** Case- and width-insensitive title comparison (preview search). */
 export function normaliseTitle(title: string): string {
   return title.normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
 }

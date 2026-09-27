@@ -150,27 +150,6 @@ export function createPreviewCatalogueSource(now: () => number = Date.now): Cata
       return delay(page(albums, request), signal);
     },
 
-    getAlbumSummaries(ids, signal) {
-      return delay(
-        ids.flatMap((id) => {
-          const album = previewAlbum(id);
-          return album ? [summary(album)] : [];
-        }),
-        signal,
-      );
-    },
-
-    findArtistReleasesByTitle(artistId, titles, signal) {
-      const albums = PREVIEW_ALBUMS.filter((a) => a.artists.some((artist) => artist.id === artistId));
-      return delay(
-        titles.flatMap((title) => {
-          const album = albums.find((a) => normaliseTitle(a.name) === normaliseTitle(title));
-          return album ? [summary(album)] : [];
-        }),
-        signal,
-      );
-    },
-
     search(request, signal) {
       const { query, types } = request;
       const results: SearchResults = { tracks: null, artists: null, albums: null, playlists: null };

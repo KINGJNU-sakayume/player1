@@ -14,8 +14,6 @@ describe('artist editorial overrides', () => {
     const editorial = getArtistEditorial(id);
     expect(editorial?.name).toBe(name);
     expect(editorial?.bio?.length).toBeGreaterThan(0);
-    expect(editorial?.featuredReleaseIds).toHaveLength(3);
-    expect(editorial?.featuredReleaseTitles).toHaveLength(3);
   });
 
   it('returns null for artists without an override (Spotify metadata only)', () => {
@@ -24,14 +22,13 @@ describe('artist editorial overrides', () => {
     expect(getArtistEditorial('')).toBeNull();
   });
 
-  it('treats entries without usable content as absent and filters invalid IDs', () => {
+  it('treats entries without usable content as absent and trims blank paragraphs', () => {
     const source = {
-      empty: { artistId: 'empty', bio: ['   '], featuredReleaseIds: [] },
-      partial: { artistId: 'partial', featuredReleaseIds: ['not an id!', '5zi7WsKlIiUXv09tbGLKsE'] },
+      empty: { artistId: 'empty', bio: ['   '] },
+      partial: { artistId: 'partial', bio: ['', 'One paragraph.', '  '] },
     };
     expect(getArtistEditorial('empty', source)).toBeNull();
-    expect(getArtistEditorial('partial', source)?.featuredReleaseIds).toEqual(['5zi7WsKlIiUXv09tbGLKsE']);
-    expect(getArtistEditorial('partial', source)?.bio).toEqual([]);
+    expect(getArtistEditorial('partial', source)?.bio).toEqual(['One paragraph.']);
   });
 });
 

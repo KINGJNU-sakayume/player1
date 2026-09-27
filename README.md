@@ -12,7 +12,7 @@ type, and one album at a time. It implements the **Catalogue version** described
 | **Now Playing** | One viewport, no page scroll. Cover with title, artist and album on the left; synced lyrics on the right with the line just sung, the current line (sized to fill the column, wrapping at word / phrase boundaries), its translation and the next three lines. The whole screen takes on the colour of the album cover. Controls sit in the composition: previous / play / next, seek, times, volume, queue, like, translation toggle and device picker. |
 | **Home** | Liked songs and followed artists first, then liked (saved) albums; playlists and recently played in a quieter band at the end. |
 | **Album** | Cover, title, artist, release facts and description on the left; the complete track sequence on the right. |
-| **Artist** | Portrait and biography side by side, then selected releases and a compact discography. Editorial overrides for Vaundy, Tyler, The Creator and tripleS; every other artist renders cleanly from Spotify data alone. |
+| **Artist** | Portrait and biography side by side, then the full discography as covers with year, type and track count. Editorial overrides for Vaundy, Tyler, The Creator and tripleS; every other artist renders cleanly from Spotify data alone. |
 | **Search** | Tracks, artists, albums and playlists, driven by the URL and navigable from the keyboard. |
 | **Queue** | A drawer with the current item and what plays next. |
 
@@ -287,8 +287,6 @@ metadata alone — never add placeholder prose.
     name: 'Vaundy',                             // for editors only; the page shows Spotify's name
     language: 'ko',                             // language of the bio, for correct CJK glyphs
     bio: ['First paragraph…', 'Second paragraph…'],
-    featuredReleaseIds: ['3RhkGySFESW5d50IlNWuP1'],   // "Selected releases", in order
-    featuredReleaseTitles: ['呼び声'],                 // fallback matched by title if an ID changes
   },
   ```
 
