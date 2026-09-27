@@ -47,6 +47,18 @@ export function PlaybackNotice() {
             Start audio
           </button>
         )}
+        {issue.kind === 'playback-failed' && (
+          <button
+            type="button"
+            className={styles.noticeAction}
+            onClick={() => {
+              engine.activateAudio();
+              void engine.resume();
+            }}
+          >
+            Try again
+          </button>
+        )}
         {issue.kind === 'no-active-device' && playHere}
         <button
           type="button"
@@ -55,6 +67,14 @@ export function PlaybackNotice() {
         >
           Dismiss
         </button>
+        {issue.hints && issue.hints.length > 0 && (
+          <ul className={styles.noticeHints}>
+            {issue.hints.map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
+        )}
+        {issue.detail && <p className={styles.noticeDetail}>{issue.detail}</p>}
       </div>
     );
   }

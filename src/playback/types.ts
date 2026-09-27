@@ -72,7 +72,9 @@ export type PlaybackIssueKind =
   | 'autoplay-blocked'
   | 'network'
   | 'unauthorized'
-  | 'command-failed';
+  | 'command-failed'
+  /** This browser's player keeps skipping tracks it cannot play (usually DRM); playback was stopped. */
+  | 'playback-failed';
 
 export interface PlaybackIssue {
   kind: PlaybackIssueKind;
@@ -80,6 +82,10 @@ export interface PlaybackIssue {
   /** Monotonic time. */
   at: number;
   retryAfterMs?: number;
+  /** Steps the listener can take, one per line. */
+  hints?: string[];
+  /** What Spotify itself reported, for diagnosis. */
+  detail?: string;
 }
 
 export interface PlayerState {

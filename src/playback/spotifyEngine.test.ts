@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { SpotifyClient } from '../spotify/client';
 import type { SpotifyPlaybackState, SpotifyTrack } from '../spotify/types';
 import { PlayerStore } from './playerStore';
-import { SpotifyPlaybackEngine, type Timers } from './spotifyEngine';
+import { SKIP_LOOP, SpotifyPlaybackEngine, type Timers } from './spotifyEngine';
 import type { WebPlaybackDevice, WebPlaybackOptions } from './spotifyPlaybackSdk';
 
 const track: SpotifyTrack = {
@@ -77,9 +77,16 @@ function sdkState(paused = false): Spotify.PlaybackState {
   } as Spotify.PlaybackState;
 }
 
+/** The SDK state for another track of the queue, at `position`. */
+function sdkTrackState(id: string, position = 0, paused = false): Spotify.PlaybackState {
+  const state = sdkState(paused);
+  const current = { ...state.track_window.current_track, id, uri: `spotify:track:${id}` };
+  return { ...state, position, track_window: { ...state.track_window, current_track: current } };
+}
+
 type Route = (method: string, path: string) => Response;
 
-function harness(options: { route?: Route; supported?: boolean } = {}) {
+function harness(options: { route?: Route; supported?: boolean; protectedAudio?: boolean } = {}) {
   const store = new PlayerStore();
   const requests: Array<{ method: string; path: string; query: URLSearchParams; body: unknown }> = [];
   const route: Route =
@@ -139,6 +146,7 @@ function harness(options: { route?: Route; supported?: boolean } = {}) {
       return device;
     },
     isPlaybackSupported: () => options.supported ?? true,
+    probeProtectedAudio: async () => options.protectedAudio ?? true,
     now: () => now,
     timers: fakeTimers,
     visibility: { isVisible: () => true, subscribe: () => () => undefined },
@@ -153,6 +161,12 @@ function harness(options: { route?: Route; supported?: boolean } = {}) {
     refreshAccessToken,
     callbacks: () => created[created.length - 1]!.callbacks,
     advance: (ms: number) => (now += ms),
+    /** Runs every timer pending right now (polls, re-anchors, the skip-loop check). */
+    runTimers: () => {
+      const pending = [...timers.values()];
+      timers.clear();
+      for (const fn of pending) fn();
+    },
     flush: () => new Promise((resolve) => setTimeout(resolve, 0)),
   };
 }
@@ -299,6 +313,91 @@ describe('SpotifyPlaybackEngine', () => {
     await h.flush();
     expect(h.store.getState().sdk).toMatchObject({ kind: 'error', reason: 'account' });
     h.engine.stop();
+  });
+
+  describe('runaway skipping', () => {
+    // Nothing plays anywhere else: the browser is the only device.
+    const onlyThisBrowser: Route = () => new Response(null, { status: 204 });
+
+    async function playingHere(options: { protectedAudio?: boolean } = {}) {
+      const h = harness({ route: onlyThisBrowser, ...options });
+      h.engine.start();
+      await h.flush();
+      h.callbacks().onReady('web-device');
+      h.callbacks().onState(sdkTrackState('t0'));
+      return h;
+    }
+
+    /** The SDK moves on from `count` tracks, a second apart, without playing them. */
+    function skipUnplayed(h: Awaited<ReturnType<typeof playingHere>>, count: number) {
+      for (let i = 1; i <= count; i += 1) {
+        h.advance(1_000);
+        h.callbacks().onState(sdkTrackState(`t${i}`));
+      }
+    }
+
+    async function settle(h: Awaited<ReturnType<typeof playingHere>>) {
+      for (let i = 0; i < 5; i += 1) await h.flush();
+    }
+
+    it('stops the SDK running through the queue in silence and explains why', async () => {
+      const h = await playingHere({ protectedAudio: false });
+      let call = 0;
+      vi.mocked(h.device.getCurrentState).mockImplementation(async () => sdkTrackState(`t${10 + call++}`));
+      skipUnplayed(h, SKIP_LOOP.unplayedTracks);
+      h.runTimers();
+      await settle(h);
+      expect(h.device.pause).toHaveBeenCalled();
+      const issue = h.store.getState().issue;
+      expect(issue?.kind).toBe('playback-failed');
+      expect(issue?.message).toMatch(/protected \(DRM\) audio/);
+      expect(issue?.hints?.length).toBeGreaterThan(0);
+      expect(h.store.getState().snapshot.paused).toBe(true);
+      h.engine.stop();
+    });
+
+    it('leaves playback alone when the listener skipped on purpose and the next track plays', async () => {
+      const h = await playingHere();
+      let position = 0;
+      vi.mocked(h.device.getCurrentState).mockImplementation(async () => sdkTrackState('t3', (position += 2_000)));
+      skipUnplayed(h, SKIP_LOOP.unplayedTracks);
+      h.runTimers();
+      await settle(h);
+      expect(h.device.pause).not.toHaveBeenCalled();
+      expect(h.store.getState().issue).toBeNull();
+      h.engine.stop();
+    });
+
+    it('does not count skips made with the app’s own controls', async () => {
+      const h = await playingHere();
+      for (let i = 1; i <= SKIP_LOOP.unplayedTracks + 1; i += 1) {
+        h.advance(1_000);
+        await h.engine.next();
+        h.advance(300);
+        h.callbacks().onState(sdkTrackState(`t${i}`));
+      }
+      expect(h.device.getCurrentState).not.toHaveBeenCalled();
+      h.engine.stop();
+    });
+
+    it('treats repeated SDK playback errors as a failing player and reports the licence problem', async () => {
+      const h = await playingHere({ protectedAudio: true });
+      vi.mocked(h.device.getCurrentState).mockImplementation(async () => sdkTrackState('t0', 0, true));
+      for (let i = 0; i < SKIP_LOOP.errors; i += 1) {
+        h.advance(1_000);
+        h.callbacks().onError('playback', 'Failed to play track');
+      }
+      h.runTimers();
+      await settle(h);
+      const issue = h.store.getState().issue;
+      expect(issue?.kind).toBe('playback-failed');
+      expect(issue?.message).toMatch(/licence/);
+      expect(issue?.detail).toBe('Spotify reported: Failed to play track');
+      // Trying again clears the notice until the player fails again.
+      await h.engine.resume();
+      expect(h.store.getState().issue).toBeNull();
+      h.engine.stop();
+    });
   });
 
   it('marks the device as reconnecting when it goes offline', async () => {

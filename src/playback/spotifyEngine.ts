@@ -7,9 +7,11 @@ import * as api from '../spotify/endpoints';
 import { isSpotifyApiError } from '../spotify/errors';
 import { mapDevice, mapTrackIdentity } from '../spotify/mappers';
 import type { PlaybackEngine } from './engine';
+import { describeSkipLoop } from './playbackHelp';
 import { monotonicNow, positionAt, remainingAt } from './playbackClock';
 import type { PlayerAction } from './playerReducer';
 import type { PlayerStore } from './playerStore';
+import { probeProtectedAudio } from './protectedAudio';
 import {
   createWebPlaybackAdapter,
   isPlaybackSupported,
@@ -56,6 +58,42 @@ export const POLL_INTERVALS = {
   afterCommand: [700, 2_000] as const,
 };
 
+/**
+ * Runaway skipping. When the browser cannot decrypt Spotify's audio (no DRM
+ * licence, protected content turned off, licence or audio requests blocked),
+ * the SDK gives up on each track and moves on to the next, running through
+ * the queue in silence. Either signal below triggers a check; if the position
+ * is still standing, playback is stopped and the likely cause explained.
+ */
+export const SKIP_LOOP = {
+  windowMs: 60_000,
+  /** Tracks left without being played, within the window. */
+  unplayedTracks: 3,
+  /** `playback_error` events from the SDK, within the window. */
+  errors: 2,
+  /** A track left before this position (or before its last 5 s) was not played through. */
+  playedMs: 10_000,
+  /** A track change this soon after one of our own commands is that command's doing. */
+  commandMs: 2_000,
+  /** The check: after this long, is the same track still playing and `advanceMs` further on? */
+  checkMs: 3_000,
+  advanceMs: 1_000,
+} as const;
+
+/** Records an event at `now` and returns how many fall within the skip-loop window. */
+function countRecent(times: number[], now: number): number {
+  times.push(now);
+  while (times.length > 0 && now - times[0]! > SKIP_LOOP.windowMs) times.shift();
+  return times.length;
+}
+
+/** Audio is really playing: the same track is still current, not paused or loading, and has moved on. */
+function isPlayingThrough(before: Spotify.PlaybackState | null, after: Spotify.PlaybackState): boolean {
+  if (!before || after.paused || after.loading) return false;
+  const sameTrack = before.track_window?.current_track?.uri === after.track_window?.current_track?.uri;
+  return sameTrack && after.position - before.position >= SKIP_LOOP.advanceMs;
+}
+
 const REANCHOR_MS = 3_000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const VOLUME_KEY = 'arc.player.volume.v1';
@@ -67,6 +105,8 @@ export interface SpotifyEngineOptions {
   refreshAccessToken(): Promise<string | null>;
   createDevice?: WebPlaybackFactory;
   isPlaybackSupported?: () => boolean;
+  /** Whether the browser grants DRM for audio (diagnosis only). */
+  probeProtectedAudio?: () => Promise<boolean>;
   now?: () => number;
   timers?: Timers;
   visibility?: VisibilitySource;
@@ -89,6 +129,7 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
   private readonly client: SpotifyClient;
   private readonly createDevice: WebPlaybackFactory;
   private readonly supported: () => boolean;
+  private readonly probeProtectedAudio: () => Promise<boolean>;
   private readonly now: () => number;
   private readonly timers: Timers;
   private readonly visibility: VisibilitySource;
@@ -101,18 +142,25 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
   private pollTimer: unknown = null;
   private reanchorTimer: unknown = null;
   private reconnectTimer: unknown = null;
+  private skipCheckTimer: unknown = null;
   private followUpTimers: unknown[] = [];
   private reconnectAttempts = 0;
   private authRetried = false;
   private rateLimitedUntil = 0;
   private syncInFlight: Promise<void> | null = null;
   private unsubscribeVisibility: (() => void) | null = null;
+  /** The SDK's current track and the furthest position seen in it (see SKIP_LOOP). */
+  private sdkTrack: { uri: string; maxPositionMs: number; durationMs: number } | null = null;
+  private unplayedAt: number[] = [];
+  private playbackErrorsAt: number[] = [];
+  private lastPlaybackError: string | null = null;
 
   constructor(private readonly options: SpotifyEngineOptions) {
     this.store = options.store;
     this.client = options.client;
     this.createDevice = options.createDevice ?? createWebPlaybackAdapter;
     this.supported = options.isPlaybackSupported ?? isPlaybackSupported;
+    this.probeProtectedAudio = options.probeProtectedAudio ?? (() => probeProtectedAudio());
     this.now = options.now ?? monotonicNow;
     this.timers = options.timers ?? browserTimers;
     this.visibility = options.visibility ?? documentVisibility;
@@ -138,6 +186,7 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
     this.clearTimer('pollTimer');
     this.clearTimer('reanchorTimer');
     this.clearTimer('reconnectTimer');
+    this.resetSkipWatch();
     for (const timer of this.followUpTimers) this.timers.clearTimeout(timer);
     this.followUpTimers = [];
     this.unsubscribeVisibility?.();
@@ -211,12 +260,14 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
   private handleSdkState(state: Spotify.PlaybackState | null): void {
     if (!state) {
       // Playback was transferred to another device (or stopped).
+      this.resetSkipWatch();
       this.dispatch({ type: 'sdk/inactive', now: this.now() });
       this.clearTimer('reanchorTimer');
       void this.resync();
       return;
     }
     if (!this.deviceId) return;
+    this.watchTrack(state);
     this.dispatch({ type: 'sdk/state', snapshot: mapSdkState(state, this.deviceId, this.volume, this.now()) });
     if (state.paused) this.clearTimer('reanchorTimer');
     else this.scheduleReanchor();
@@ -236,6 +287,7 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
         .catch(() => null)
         .then((state) => {
           if (!this.running || !state || this.store.getState().snapshot.source !== 'sdk') return;
+          this.watchTrack(state);
           this.dispatch({ type: 'sdk/state', snapshot: mapSdkState(state, deviceId, this.volume, this.now()) });
           if (!state.paused) this.scheduleReanchor();
         });
@@ -252,7 +304,10 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
       }
     }
     if (reason === 'playback') {
+      this.lastPlaybackError = message;
+      if (this.store.getState().issue?.kind === 'playback-failed') return;
       this.setIssue('command-failed', `Spotify could not play this item: ${message}`);
+      if (countRecent(this.playbackErrorsAt, this.now()) >= SKIP_LOOP.errors) this.scheduleSkipCheck();
       return;
     }
     const friendly: Partial<Record<SdkErrorReason, string>> = {
@@ -261,6 +316,68 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
       initialization: 'This browser could not start Spotify playback. Use another Spotify device.',
     };
     this.setSdkError(reason, friendly[reason] ?? message);
+  }
+
+  /* ── Runaway skipping (see SKIP_LOOP) ────────────────────────────────── */
+
+  /** Notes each track the SDK leaves before it was played through without us having asked. */
+  private watchTrack(state: Spotify.PlaybackState): void {
+    const uri = state.track_window?.current_track?.uri;
+    if (!uri) return;
+    const previous = this.sdkTrack;
+    if (previous?.uri === uri) {
+      previous.maxPositionMs = Math.max(previous.maxPositionMs, state.position);
+      return;
+    }
+    this.sdkTrack = { uri, maxPositionMs: state.position, durationMs: state.duration };
+    if (!previous) return;
+    const now = this.now();
+    if (now - this.store.getState().lastCommandAt < SKIP_LOOP.commandMs) return;
+    // Tracks that ended on their own (short ones included) were played.
+    if (previous.maxPositionMs >= Math.min(SKIP_LOOP.playedMs, previous.durationMs - 5_000)) return;
+    if (countRecent(this.unplayedAt, now) >= SKIP_LOOP.unplayedTracks) this.scheduleSkipCheck();
+  }
+
+  /**
+   * Confirms a suspected skip loop before acting: someone skipping quickly
+   * from another device or with media keys leaves a track that then plays.
+   */
+  private scheduleSkipCheck(): void {
+    const device = this.device;
+    if (this.skipCheckTimer !== null || !device) return;
+    const scheduledAt = this.now();
+    const before = device.getCurrentState().catch(() => null);
+    this.skipCheckTimer = this.timers.setTimeout(() => {
+      this.skipCheckTimer = null;
+      void Promise.all([before, device.getCurrentState().catch(() => null)]).then(([first, second]) => {
+        if (!this.running || device !== this.device) return;
+        // Playback moved to another device, the listener acted, or audio is playing: not a loop.
+        if (!second || this.store.getState().lastCommandAt > scheduledAt || isPlayingThrough(first, second)) {
+          this.unplayedAt = [];
+          this.playbackErrorsAt = [];
+          return;
+        }
+        void this.stopSkipLoop();
+      });
+    }, SKIP_LOOP.checkMs);
+  }
+
+  private async stopSkipLoop(): Promise<void> {
+    const sdkMessage = this.lastPlaybackError;
+    this.resetSkipWatch();
+    if (this.sdkIsActive()) await this.pause();
+    const protectedAudio = await this.probeProtectedAudio().catch(() => true);
+    if (!this.running) return;
+    const { message, ...extra } = describeSkipLoop(protectedAudio, sdkMessage);
+    this.setIssue('playback-failed', message, extra);
+  }
+
+  private resetSkipWatch(): void {
+    this.clearTimer('skipCheckTimer');
+    this.sdkTrack = null;
+    this.unplayedAt = [];
+    this.playbackErrorsAt = [];
+    this.lastPlaybackError = null;
   }
 
   private scheduleReconnect(): void {
@@ -278,6 +395,7 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
   }
 
   private reconnectNow(): void {
+    this.resetSkipWatch();
     this.device?.disconnect();
     this.device = null;
     this.deviceId = null;
@@ -497,7 +615,10 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
     followUp: boolean,
   ): Promise<void> {
     this.dispatch({ type: 'command/issued', at: this.now(), patch });
-    this.dispatch({ type: 'issue/clear', kinds: ['command-failed', 'restricted', 'autoplay-blocked', 'no-active-device'] });
+    this.dispatch({
+      type: 'issue/clear',
+      kinds: ['command-failed', 'restricted', 'autoplay-blocked', 'no-active-device', 'playback-failed'],
+    });
     try {
       await action();
     } catch (error) {
@@ -555,7 +676,11 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
     }
   }
 
-  private setIssue(kind: PlaybackIssue['kind'], message: string, extra: { retryAfterMs?: number } = {}): void {
+  private setIssue(
+    kind: PlaybackIssue['kind'],
+    message: string,
+    extra: Pick<PlaybackIssue, 'retryAfterMs' | 'hints' | 'detail'> = {},
+  ): void {
     this.dispatch({ type: 'issue/set', issue: { kind, message, at: this.now(), ...extra } });
   }
 
@@ -563,7 +688,7 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
     this.dispatch({ type: 'sdk/status', status: { kind: 'error', reason, message } });
   }
 
-  private clearTimer(key: 'pollTimer' | 'reanchorTimer' | 'reconnectTimer'): void {
+  private clearTimer(key: 'pollTimer' | 'reanchorTimer' | 'reconnectTimer' | 'skipCheckTimer'): void {
     if (this[key] !== null) {
       this.timers.clearTimeout(this[key]);
       this[key] = null;

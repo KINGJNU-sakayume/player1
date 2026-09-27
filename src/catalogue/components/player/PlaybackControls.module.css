@@ -210,6 +210,26 @@
   text-underline-offset: 0.2em;
 }
 
+/* Steps under a playback problem, each on its own line, in plain ink. */
+.noticeHints,
+.noticeDetail {
+  flex-basis: 100%;
+  font-size: var(--text-micro);
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.noticeHints {
+  display: grid;
+  gap: 2px;
+  padding-left: 1.1em;
+  list-style: disc;
+}
+
+.noticeDetail {
+  color: var(--muted);
+}
+
 /* Keep transport and secondary controls on one row: drop the device name first. */
 @container (max-width: 600px) {
   .deviceName {

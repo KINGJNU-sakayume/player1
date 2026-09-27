@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { IconButton } from '../../catalogue/components/Button';
 import { Cover } from '../../catalogue/components/Cover';
 import { Icon } from '../../catalogue/components/Icon';
+import { cx } from '../../lib/cx';
 import { joinArtistNames } from '../../lib/format';
 import { useEngine, usePlayerSelector, useProgressProperty } from '../../playback/hooks';
 import styles from './MiniPlayer.module.css';
@@ -12,6 +13,8 @@ export function MiniPlayer() {
   const track = usePlayerSelector((s) => s.snapshot.track);
   const paused = usePlayerSelector((s) => s.snapshot.paused);
   const disallows = usePlayerSelector((s) => s.snapshot.disallows);
+  // The explanation lives in Now Playing's notice; from other pages, point there.
+  const failed = usePlayerSelector((s) => s.issue?.kind === 'playback-failed');
   const engine = useEngine();
   const progressRef = useRef<HTMLDivElement>(null);
   useProgressProperty(progressRef);
@@ -21,7 +24,15 @@ export function MiniPlayer() {
 
   return (
     <div className={styles.mini} role="group" aria-label="Mini player">
-      <Link to="/now-playing" className={styles.link} aria-label={`Now playing: ${track.title} by ${artists}. Open Now Playing`}>
+      <Link
+        to="/now-playing"
+        className={styles.link}
+        aria-label={
+          failed
+            ? `${track.title}: this browser could not play it. Open Now Playing for how to fix it`
+            : `Now playing: ${track.title} by ${artists}. Open Now Playing`
+        }
+      >
         <Cover
           className={styles.cover}
           images={track.album.images}
@@ -32,7 +43,9 @@ export function MiniPlayer() {
         />
         <span className={styles.text} aria-hidden="true">
           <span className={styles.title}>{track.title}</span>
-          <span className={styles.artist}>{artists}</span>
+          <span className={cx(styles.artist, failed && styles.failed)}>
+            {failed ? 'Can’t play in this browser — see why' : artists}
+          </span>
         </span>
       </Link>
       <div className={styles.transport}>

@@ -371,6 +371,13 @@ refresh. Each failure has a designed state instead of a silent failure.
 - **Premium and browser support.** Playback control (SDK and Web API player endpoints) requires Premium. Audio in
   the browser needs the Web Playback SDK, i.e. a desktop browser with protected-media (EME/Widevine) support; mobile
   browsers are not supported. Without it the app controls another Spotify device instead.
+- **Tracks skip without playing in the browser.** When the browser cannot decrypt Spotify's audio — Widevine
+  missing or out of date, protected content turned off, or licence / audio requests blocked by an extension or
+  network — the SDK gives up on each track and moves to the next. The engine detects this (several tracks left
+  unplayed, or repeated SDK playback errors, then a check that the position really is standing still), pauses, and
+  Now Playing explains the likely cause and the fix (update Widevine at `chrome://components`, allow protected
+  content, disable blocking extensions for the site). The same browser fails on open.spotify.com too; the fix is on
+  the browser side, or play on the Spotify app and use this page as a remote.
 - **Autoplay.** Browsers block audio until the page has had a click or key press, so the first play in a session
   may need one.
 - **Development Mode API limits.** Search returns at most 10 results per type per page, and an artist's discography
