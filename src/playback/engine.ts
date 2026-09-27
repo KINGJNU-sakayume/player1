@@ -20,6 +20,8 @@ export interface PlaybackEngine {
   seek(positionMs: number): Promise<void>;
   /** 0–1 */
   setVolume(volume: number): Promise<void>;
+  /** Spotify's shuffle mode; it stays on for whatever plays next, as in Spotify's own apps. */
+  setShuffle(shuffle: boolean): Promise<void>;
 
   transferToBrowser(play?: boolean): Promise<void>;
   transferTo(deviceId: string, play?: boolean): Promise<void>;

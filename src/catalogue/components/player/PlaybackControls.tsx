@@ -24,6 +24,14 @@ export function PlaybackControls() {
       <div className={styles.transportRow}>
         <div className={styles.transport}>
           <IconButton
+            label="Shuffle"
+            icon="shuffle"
+            className={styles.toggle}
+            pressed={snapshot.shuffle}
+            disabled={!hasTrack || snapshot.disallows.togglingShuffle}
+            onClick={() => void engine.setShuffle(!snapshot.shuffle)}
+          />
+          <IconButton
             label="Previous track"
             icon="previous"
             disabled={!hasTrack || snapshot.disallows.skippingPrev}

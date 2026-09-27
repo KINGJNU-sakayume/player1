@@ -24,6 +24,7 @@ export function emptySnapshot(now = 0): PlayerSnapshot {
     track: null,
     context: null,
     paused: true,
+    shuffle: false,
     buffering: false,
     positionMs: 0,
     sampledAt: now,

@@ -181,6 +181,28 @@ describe('SpotifyPlaybackEngine', () => {
     h.engine.stop();
   });
 
+  it('toggles shuffle through the Web API with an optimistic update', async () => {
+    const h = harness();
+    h.engine.start();
+    await h.flush();
+    expect(h.store.getState().snapshot.shuffle).toBe(false);
+    await h.engine.setShuffle(true);
+    const request = h.requests.find((r) => r.method === 'PUT' && r.path === '/me/player/shuffle');
+    expect(request?.query.get('state')).toBe('true');
+    expect(h.store.getState().snapshot.shuffle).toBe(true);
+    h.engine.stop();
+  });
+
+  it('reads the shuffle state from SDK events', async () => {
+    const h = harness();
+    h.engine.start();
+    await h.flush();
+    h.callbacks().onReady('web-device');
+    h.callbacks().onState({ ...sdkState(), shuffle: true });
+    expect(h.store.getState().snapshot).toMatchObject({ source: 'sdk', shuffle: true });
+    h.engine.stop();
+  });
+
   it('uses SDK events as the source of truth once this browser is active', async () => {
     const h = harness();
     h.engine.start();

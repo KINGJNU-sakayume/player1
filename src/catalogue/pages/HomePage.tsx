@@ -2,11 +2,12 @@ import { useSyncExternalStore } from 'react';
 import { usePageTitle } from '../../app/pageTitle';
 import { useSession } from '../../app/sessionContext';
 import { formatRelativeTime } from '../../lib/format';
-import { usePlay } from '../../playback/hooks';
+import { useEngine, usePlay } from '../../playback/hooks';
 import { useCurrentTrackMatcher } from '../../playback/useCurrentTrack';
 import { describeSpotifyError } from '../../spotify/errors';
 import {
   useFollowedArtists,
+  useLikedShuffle,
   useLikedTracks,
   usePlaylists,
   useRecentlyPlayed,
@@ -55,11 +56,23 @@ function ErrorState({ error, retry }: { error: unknown; retry: () => void }) {
 function LikedSongs() {
   const liked = useLikedTracks(10);
   const play = usePlay();
+  const engine = useEngine();
+  const shuffle = useLikedShuffle();
   const isCurrent = useCurrentTrackMatcher();
   const items = liked.data?.pages.flatMap((p) => p.items) ?? [];
   const total = liked.data?.pages[0]?.total;
   // Liked Songs has no public context URI; the loaded tracks play in order.
   const uris = items.map((track) => track.uri);
+
+  // Shuffle draws from the whole library, not only the rows shown here.
+  const shufflePlay = () => {
+    engine.activateAudio();
+    shuffle.mutate(total ?? items.length, {
+      onSuccess: (tracks) => {
+        if (tracks.length > 0) play({ uris: tracks.map((track) => track.uri) }, { openNowPlaying: true });
+      },
+    });
+  };
 
   return (
     <section className={page.section} aria-labelledby="liked-title">
@@ -69,12 +82,22 @@ function LikedSongs() {
         meta={total !== undefined ? total : null}
         action={
           items.length > 0 && (
-            <Button icon="play" onClick={() => play({ uris }, { openNowPlaying: true })}>
-              Play all
-            </Button>
+            <div className={home.actions}>
+              <Button icon="shuffle" onClick={shufflePlay} disabled={shuffle.isPending}>
+                {shuffle.isPending ? 'Shuffling…' : 'Shuffle'}
+              </Button>
+              <Button icon="play" onClick={() => play({ uris }, { openNowPlaying: true })}>
+                Play all
+              </Button>
+            </div>
           )
         }
       />
+      {shuffle.isError && (
+        <div className={home.notice}>
+          <ErrorState error={shuffle.error} retry={shufflePlay} />
+        </div>
+      )}
       {liked.isPending ? (
         <LoadingLine label="Loading liked songs…" />
       ) : liked.isError ? (

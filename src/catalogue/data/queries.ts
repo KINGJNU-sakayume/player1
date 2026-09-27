@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { useSession } from '../../app/sessionContext';
 import type { SearchResults, SearchType } from '../../domain/types';
 import { isSpotifyId } from '../../lib/spotifyUri';
+import { drawLikedShuffle } from './likedShuffle';
 
 const MINUTE = 60_000;
 
@@ -25,6 +26,12 @@ export function useLikedTracks(pageSize = 20) {
     getNextPageParam: (last) => (last.hasMore ? last.offset + last.items.length : undefined),
     staleTime: 2 * MINUTE,
   });
+}
+
+/** A fresh shuffled selection from Liked Songs on every call (see likedShuffle.ts). */
+export function useLikedShuffle() {
+  const { catalogue } = useSession();
+  return useMutation({ mutationFn: (total: number) => drawLikedShuffle(catalogue, total) });
 }
 
 export function useFollowedArtists(pageSize = 24) {

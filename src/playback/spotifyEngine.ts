@@ -451,6 +451,11 @@ export class SpotifyPlaybackEngine implements PlaybackEngine {
     return this.command({ volume: value }, () => api.setVolume(this.client, value * 100), true);
   }
 
+  async setShuffle(shuffle: boolean): Promise<void> {
+    // The Web Playback SDK has no shuffle command; the Web API reaches the active device, this browser included.
+    return this.command({ shuffle }, () => api.setShuffle(this.client, shuffle), true);
+  }
+
   async transferToBrowser(play = true): Promise<void> {
     const { sdk } = this.store.getState();
     if (sdk.kind !== 'ready') {

@@ -67,6 +67,7 @@ export function mapSdkState(
     track: mapSdkTrack(window?.current_track),
     context: mapContext(state.context?.uri, state.context?.metadata?.name),
     paused: state.paused,
+    shuffle: state.shuffle,
     buffering: Boolean(state.loading),
     positionMs: state.position,
     sampledAt: now,
@@ -79,6 +80,7 @@ export function mapSdkState(
       seeking: Boolean(state.disallows?.seeking),
       skippingNext: Boolean(state.disallows?.skipping_next),
       skippingPrev: Boolean(state.disallows?.skipping_prev),
+      togglingShuffle: Boolean(state.disallows?.toggling_shuffle),
     },
     nextTracks: (window?.next_tracks ?? []).map(mapSdkTrack).filter((t): t is TrackIdentity => t !== null),
   };
@@ -97,6 +99,7 @@ export function mapRemotePlayback(
     track,
     context: mapContext(state.context?.uri, null),
     paused: !state.is_playing,
+    shuffle: state.shuffle_state,
     buffering: false,
     positionMs: state.progress_ms ?? 0,
     sampledAt: now,

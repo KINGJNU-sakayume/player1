@@ -186,6 +186,7 @@ export interface MappedDisallows {
   seeking: boolean;
   skippingNext: boolean;
   skippingPrev: boolean;
+  togglingShuffle: boolean;
 }
 
 export function mapDisallows(actions: SpotifyPlaybackState['actions']): MappedDisallows {
@@ -196,5 +197,6 @@ export function mapDisallows(actions: SpotifyPlaybackState['actions']): MappedDi
     seeking: Boolean(source.seeking),
     skippingNext: Boolean(source.skipping_next),
     skippingPrev: Boolean(source.skipping_prev),
+    togglingShuffle: Boolean(source.toggling_shuffle),
   };
 }

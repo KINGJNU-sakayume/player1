@@ -37,6 +37,22 @@
   gap: 8px;
 }
 
+/* An on toggle is marked by a dot as well as colour. */
+.toggle {
+  position: relative;
+}
+
+.toggle[aria-pressed='true']::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  left: calc(50% - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
 .play {
   display: grid;
   place-items: center;

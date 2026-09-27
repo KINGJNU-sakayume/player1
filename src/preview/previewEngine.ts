@@ -1,4 +1,5 @@
 import type { DeviceInfo, TrackIdentity } from '../domain/types';
+import { shuffled } from '../lib/shuffle';
 import { parseSpotifyUri } from '../lib/spotifyUri';
 import type { PlaybackEngine } from '../playback/engine';
 import { monotonicNow, positionAt } from '../playback/playbackClock';
@@ -24,8 +25,12 @@ export const PREVIEW_DEVICE: DeviceInfo = {
  */
 export class PreviewPlaybackEngine implements PlaybackEngine {
   readonly kind = 'preview' as const;
+  /** The context in its own order. */
+  private order: TrackIdentity[] = [];
+  /** Play order: `order`, or the current track followed by the rest shuffled. */
   private queue: TrackIdentity[] = [];
   private index = 0;
+  private shuffle = false;
   private contextUri: string | null = null;
   private volume = 0.6;
   private endTimer: ReturnType<typeof setTimeout> | null = null;
@@ -103,6 +108,15 @@ export class PreviewPlaybackEngine implements PlaybackEngine {
     });
   }
 
+  async setShuffle(shuffle: boolean): Promise<void> {
+    this.shuffle = shuffle;
+    const current = this.current();
+    if (!current) return;
+    // As in Spotify: the current track keeps playing and only what follows is reordered.
+    this.arrange(Math.max(0, this.order.indexOf(current)), current);
+    this.moveTo(this.index, this.store.getState().snapshot.paused, this.position());
+  }
+
   async transferToBrowser(): Promise<void> {
     /* single preview device */
   }
@@ -152,10 +166,24 @@ export class PreviewPlaybackEngine implements PlaybackEngine {
       });
       return;
     }
-    this.queue = list;
+    this.order = list;
     this.contextUri = request.contextUri ?? null;
     const offset = request.offsetUri ? list.findIndex((t) => t.uri === request.offsetUri) : 0;
-    this.moveTo(Math.max(0, offset), paused, positionMs);
+    // Shuffle without a chosen track starts anywhere in the context.
+    const start = this.shuffle && !request.offsetUri ? Math.floor(Math.random() * list.length) : Math.max(0, offset);
+    this.arrange(start, list[start]!);
+    this.moveTo(this.index, paused, positionMs);
+  }
+
+  /** Builds the play order around `current`, which sits at `orderIndex` in the context. */
+  private arrange(orderIndex: number, current: TrackIdentity): void {
+    if (this.shuffle) {
+      this.queue = [current, ...shuffled(this.order.filter((_, i) => i !== orderIndex))];
+      this.index = 0;
+    } else {
+      this.queue = [...this.order];
+      this.index = orderIndex;
+    }
   }
 
   private moveTo(index: number, paused: boolean, positionMs = 0): void {
@@ -167,6 +195,7 @@ export class PreviewPlaybackEngine implements PlaybackEngine {
       track,
       context: this.contextUri ? { uri: this.contextUri, type: context?.type ?? 'context', name: null } : null,
       paused,
+      shuffle: this.shuffle,
       buffering: false,
       positionMs,
       sampledAt: this.now(),

@@ -15,6 +15,7 @@ export interface PlaybackDisallows {
   seeking: boolean;
   skippingNext: boolean;
   skippingPrev: boolean;
+  togglingShuffle: boolean;
 }
 
 export const NO_DISALLOWS: PlaybackDisallows = {
@@ -23,6 +24,7 @@ export const NO_DISALLOWS: PlaybackDisallows = {
   seeking: false,
   skippingNext: false,
   skippingPrev: false,
+  togglingShuffle: false,
 };
 
 export interface PlaybackContextInfo {
@@ -37,6 +39,8 @@ export interface PlayerSnapshot {
   track: TrackIdentity | null;
   context: PlaybackContextInfo | null;
   paused: boolean;
+  /** Spotify's shuffle mode: the context plays in random order. */
+  shuffle: boolean;
   /** The SDK is buffering: the position does not advance. */
   buffering: boolean;
   /** Playback position at `sampledAt`. */

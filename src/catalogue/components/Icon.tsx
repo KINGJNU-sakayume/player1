@@ -5,6 +5,7 @@ export type IconName =
   | 'pause'
   | 'next'
   | 'previous'
+  | 'shuffle'
   | 'volume'
   | 'volume-mute'
   | 'queue'
@@ -30,6 +31,7 @@ const PATHS: Record<IconName, ReactElement> = {
   pause: <path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z" fill="currentColor" />,
   next: <path d="M5.5 6v12l9-6zM16.2 6h2.1v12h-2.1z" fill="currentColor" />,
   previous: <path d="M18.5 6v12l-9-6zM5.7 6h2.1v12H5.7z" fill="currentColor" />,
+  shuffle: <path d="M4 7h3.2l8.6 10H20M4 17h3.2l8.6-10H20M17.5 4.5L20 7l-2.5 2.5M17.5 14.5L20 17l-2.5 2.5" {...stroke} />,
   volume: (
     <>
       <path d="M4 9.5h3.4L12 6v12l-4.6-3.5H4z" fill="currentColor" />
