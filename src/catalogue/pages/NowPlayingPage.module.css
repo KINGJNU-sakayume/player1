@@ -1,0 +1,141 @@
+.stage {
+  --gap: clamp(32px, 4.6vw, 88px);
+  --object-share: 0.44;
+  /* Title (≤ 2 lines at display size) + byline + spacing kept below the cover. */
+  --meta-reserve: 188px;
+  container-type: size;
+  display: grid;
+  grid-template-columns: minmax(0, calc(var(--object-share) * 100%)) minmax(0, 1fr);
+  gap: var(--gap);
+  height: 100%;
+  min-height: 0;
+  padding: clamp(18px, 3.4vh, 44px) var(--page-gutter) clamp(16px, 3vh, 36px);
+}
+
+/* Narrower desktop: give the lyrics more room by reducing the cover first. */
+@media (max-width: 1200px) {
+  .stage {
+    --object-share: 0.39;
+  }
+}
+
+.object {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.art {
+  --art: min(100cqw * var(--object-share), 100cqh - var(--meta-reserve), var(--art-max, 720px));
+  width: var(--art);
+  margin: 0;
+}
+
+@media (min-width: 2200px) and (min-height: 1200px) {
+  .stage {
+    --art-max: 880px;
+  }
+
+  .reading {
+    height: min(100%, 1040px);
+    max-width: 1080px;
+  }
+}
+
+.meta {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-display);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: var(--tracking-display);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.title:lang(ja),
+.title:lang(ko),
+.title:lang(zh) {
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+}
+
+.byline {
+  overflow: hidden;
+  font-size: var(--text-body);
+  line-height: 1.4;
+  color: var(--ink-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.separator {
+  margin: 0 0.5em;
+  color: var(--muted);
+}
+
+.reading {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-self: center;
+  width: 100%;
+  max-width: 980px;
+  height: min(100%, 880px);
+  min-height: 0;
+}
+
+/* ── Empty / loading composition ──────────────────────────────────────── */
+
+.emptyPlate {
+  aspect-ratio: 1;
+  width: 100%;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 21%, var(--line) 21.2% 21.6%, transparent 21.8%),
+    radial-gradient(circle at 50% 50%, var(--line) 0 3%, transparent 3.2%),
+    var(--paper);
+}
+
+.loadingPlate {
+  aspect-ratio: 1;
+  width: 100%;
+  background: var(--surface);
+}
+
+.emptyReading {
+  display: grid;
+  align-content: center;
+  gap: var(--space-6);
+  align-self: center;
+  max-width: 640px;
+}
+
+/* ── Small or short windows: stack and allow scrolling rather than clipping ── */
+
+@media (max-width: 959px), (max-height: 599px) {
+  .stage {
+    container-type: inline-size;
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    gap: var(--space-6);
+  }
+
+  .art {
+    width: min(100%, 420px);
+  }
+
+  .reading {
+    height: auto;
+    min-height: 520px;
+  }
+}

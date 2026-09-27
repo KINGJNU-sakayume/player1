@@ -1,0 +1,82 @@
+{
+  "note": "Development/demo fallback only. Do not use these mock lyric lines as production lyrics.",
+  "curatedArtists": [
+    {
+      "key": "vaundy",
+      "name": "Vaundy",
+      "editorialBio": [
+        "작사·작곡·편곡과 비주얼 디렉션을 함께 다루는 멀티 아티스트라는 관점으로 큐레이션.",
+        "작품별 커버와 시각 언어의 변화를 강조."
+      ],
+      "featuredReleases": [
+        "呼び声",
+        "strobo",
+        "replica"
+      ]
+    },
+    {
+      "key": "tyler",
+      "name": "Tyler, The Creator",
+      "editorialBio": [
+        "음악, 프로듀싱, 아트 디렉션을 한 시대의 시각 세계로 묶는 아티스트라는 관점.",
+        "Flower Boy / IGOR / CALL ME IF YOU GET LOST를 대표 전시 음반으로 사용."
+      ],
+      "featuredReleases": [
+        "Flower Boy",
+        "IGOR",
+        "CALL ME IF YOU GET LOST"
+      ]
+    },
+    {
+      "key": "triples",
+      "name": "tripleS",
+      "editorialBio": [
+        "24인 완전체와 유닛의 조합 구조를 모듈형 디스코그래피로 보여주는 관점.",
+        "커버는 작게 전시하고 그룹 사진/설명과 함께 읽히게 구성."
+      ],
+      "featuredReleases": [
+        "LOVElution <ↀ>",
+        "EVOLution <⟡>",
+        "<ASSEMBLE24>"
+      ]
+    }
+  ],
+  "demoTracks": [
+    {
+      "title": "呼び声",
+      "artist": "Vaundy",
+      "durationMs": 234000,
+      "palette": {
+        "dominant": "#b91f2e",
+        "secondary": "#20302d",
+        "accent": "#d9c6a6",
+        "light": "#e7dec9",
+        "dark": "#101315"
+      }
+    },
+    {
+      "title": "EARFQUAKE",
+      "artist": "Tyler, The Creator",
+      "durationMs": 190000,
+      "palette": {
+        "dominant": "#eaa2bf",
+        "secondary": "#2d292b",
+        "accent": "#f6d8e4",
+        "light": "#f0d9df",
+        "dark": "#161416"
+      }
+    },
+    {
+      "title": "Girls Never Die",
+      "artist": "tripleS",
+      "durationMs": 187000,
+      "palette": {
+        "dominant": "#e76046",
+        "secondary": "#e1caa7",
+        "accent": "#e9eff0",
+        "light": "#ece2d1",
+        "dark": "#2a211d"
+      }
+    }
+  ]
+}

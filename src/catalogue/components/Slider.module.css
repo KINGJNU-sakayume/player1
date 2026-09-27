@@ -1,0 +1,82 @@
+.slider {
+  --track-height: 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.slider[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.slider:focus-visible {
+  outline: none;
+}
+
+.track {
+  position: relative;
+  width: 100%;
+  height: var(--track-height);
+  background: var(--surface-strong);
+  overflow: hidden;
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(var(--value, 0));
+  background: var(--active);
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--value, 0) * 100%);
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--active);
+  box-shadow: 0 0 0 2px var(--bg);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+  pointer-events: none;
+}
+
+.slider:hover .thumb,
+.slider[data-interacting] .thumb {
+  opacity: 1;
+  transform: none;
+}
+
+/* Keyboard focus: ring around the whole control plus a visible thumb. */
+.slider:focus-visible .thumb {
+  opacity: 1;
+  transform: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--focus);
+}
+
+.slider:focus-visible .track {
+  outline: 2px solid var(--focus);
+  outline-offset: 5px;
+}
+
+/* Live playback fill: driven by --progress (rAF) until the user interacts. */
+.live:not([data-interacting]) .fill {
+  transform: scaleX(var(--progress, 0));
+}
+
+.live:not([data-interacting]) .thumb {
+  left: calc(var(--progress, 0) * 100%);
+}

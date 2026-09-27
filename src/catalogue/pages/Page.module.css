@@ -1,0 +1,49 @@
+/* Shared layout for scrollable catalogue pages (Home, Search, Artist, Album). */
+
+.page {
+  width: 100%;
+  max-width: var(--content-max);
+  padding: clamp(28px, 4.6vh, 56px) var(--page-gutter) var(--space-8);
+}
+
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-bottom: clamp(32px, 5vh, 56px);
+}
+
+.eyebrow {
+  margin-bottom: 10px;
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pageTitle {
+  font-size: var(--text-display);
+  font-weight: 500;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+}
+
+.section {
+  min-width: 0;
+}
+
+/* Vertical rhythm between the top-level blocks of a page. */
+.stack > * + * {
+  margin-top: clamp(48px, 7vh, 80px);
+}
+
+.more {
+  margin-top: var(--space-5);
+}
+
+.muted {
+  color: var(--muted);
+}

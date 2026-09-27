@@ -1,0 +1,130 @@
+/*
+ * ARC Music — Catalogue design tokens.
+ * Neutral warm paper base; album colour only reaches the --active* and
+ * --cover-shadow variables, which are set at runtime by <PaletteTokens/>
+ * from src/catalogue/palette/mapPaletteToTokens.ts.
+ */
+
+/* Registered so album-colour changes can transition smoothly. */
+@property --active {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #171917;
+}
+@property --active-text {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #171917;
+}
+@property --active-soft {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(23, 25, 23, 0.07);
+}
+@property --cover-shadow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(23, 25, 23, 0.16);
+}
+
+:root {
+  /* Surfaces (must match NEUTRAL_BASE in mapPaletteToTokens.ts) */
+  --bg: #f1eee6;
+  --paper: #f8f5ee;
+  --surface: #e7e2d8;
+  --surface-strong: #dcd6ca;
+
+  /* Ink — contrast on --bg: ink 15.2:1, ink-2 7.4:1, muted 5.4:1, subtle 4.5:1 */
+  --ink: #171917;
+  --ink-2: #4a4d47;
+  --muted: #5e615a;
+  --subtle: #6b6d67;
+  /* Decorative only (2.5:1) — never for text that must be read. */
+  --faint: #969991;
+
+  --line: rgba(23, 25, 23, 0.16);
+  --line-2: rgba(23, 25, 23, 0.08);
+  --line-strong: rgba(23, 25, 23, 0.32);
+
+  /* Album-derived (runtime). Defaults are the neutral accent. */
+  --active: #171917;
+  --active-text: #171917;
+  --on-active: #f8f5ee;
+  --active-soft: rgba(23, 25, 23, 0.07);
+  --cover-shadow: rgba(23, 25, 23, 0.16);
+
+  --focus: #171917;
+  --alert: #8f2a1c;
+
+  /* Multilingual Humanist stack */
+  --font-latin: 'IBM Plex Sans';
+  --font-ko: 'Noto Sans KR';
+  --font-ja: 'Noto Sans JP';
+  --font-sans: var(--font-latin), var(--font-ko), var(--font-ja), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans-ja: var(--font-latin), var(--font-ja), var(--font-ko), system-ui, -apple-system, sans-serif;
+
+  /* Type scale — desktop readability floor is 14px */
+  --text-micro: 14px;
+  --text-small: 15px;
+  --text-body-2: 16px;
+  --text-body: 18px;
+  --text-strong: 20px;
+  --text-section: 22px;
+  --text-display: 52px;
+  --text-lyric: 60px;
+  --text-upcoming: 22px;
+
+  --leading-display: 1.02;
+  --leading-snug: 1.25;
+  --leading-body: 1.55;
+  --tracking-display: -0.04em;
+  --tracking-tight: -0.02em;
+  --tracking-label: 0.06em;
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --rail-width: 88px;
+  --topbar-height: 64px;
+  --page-gutter: clamp(28px, 4.2vw, 72px);
+  --content-max: 1480px;
+
+  /* Motion: restrained, never springy */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 180ms;
+  --dur: 240ms;
+  --dur-slow: 300ms;
+
+  --radius: 2px;
+}
+
+@media (max-width: 1280px) {
+  :root {
+    --text-display: 48px;
+    --text-lyric: 56px;
+  }
+}
+
+/* Large monitors: the top of the specified range (title 56px, lyric 64px). */
+@media (min-width: 1680px) and (min-height: 960px) {
+  :root {
+    --text-display: 56px;
+    --text-lyric: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+    --dur-slow: 0ms;
+  }
+}

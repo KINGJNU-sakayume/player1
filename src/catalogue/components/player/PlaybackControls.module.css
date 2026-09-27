@@ -1,0 +1,208 @@
+.controls {
+  display: grid;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  container-type: inline-size;
+}
+
+.progressRow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  gap: 12px;
+  align-items: center;
+}
+
+.time {
+  font-size: var(--text-small);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.time:last-child {
+  text-align: right;
+}
+
+.transportRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.play {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.play:hover:not(:disabled) {
+  background: #2c2f2b;
+}
+
+.play:disabled {
+  opacity: 0.4;
+}
+
+.play:focus-visible {
+  outline-offset: 4px;
+}
+
+.secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.volumeSlider {
+  width: 104px;
+}
+
+.saved {
+  color: var(--active-text);
+}
+
+/* ── Device picker ────────────────────────────────────────────────────── */
+
+.device {
+  position: relative;
+}
+
+.deviceButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  font-size: var(--text-small);
+  color: var(--ink-2);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.deviceButton:hover {
+  background: var(--line-2);
+  color: var(--ink);
+}
+
+.deviceName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.devicePanel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 30;
+  width: 320px;
+  padding: 16px 0 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  box-shadow: 0 18px 40px rgba(23, 25, 23, 0.12);
+}
+
+.panelTitle {
+  padding: 0 18px 10px;
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.deviceList {
+  display: grid;
+}
+
+.deviceOption {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 18px;
+  text-align: left;
+  font-size: var(--text-body-2);
+}
+
+.deviceOption:hover:not(:disabled) {
+  background: var(--line-2);
+}
+
+.deviceOption:disabled {
+  color: var(--muted);
+}
+
+.deviceMeta {
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+.deviceActive {
+  font-size: var(--text-micro);
+  color: var(--active-text);
+  font-weight: 500;
+}
+
+.panelNote {
+  padding: 10px 18px 4px;
+  font-size: var(--text-micro);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* ── Notice line under the controls ───────────────────────────────────── */
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  min-height: 24px;
+  font-size: var(--text-small);
+  color: var(--ink-2);
+}
+
+.noticeAlert {
+  color: var(--alert);
+}
+
+.noticeAction {
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Keep transport and secondary controls on one row: drop the device name first. */
+@container (max-width: 600px) {
+  .deviceName {
+    display: none;
+  }
+}
+
+@container (max-width: 520px) {
+  .volumeSlider {
+    width: 72px;
+  }
+}

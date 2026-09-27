@@ -1,0 +1,68 @@
+.mini {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 360px;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--line);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cover {
+  flex: none;
+  width: 40px;
+}
+
+.text {
+  display: grid;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.title,
+.artist {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.title {
+  font-size: var(--text-small);
+  font-weight: 500;
+}
+
+.artist {
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+.link:hover .title {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.progress {
+  position: absolute;
+  right: 0;
+  bottom: -12px;
+  left: var(--space-4);
+  height: 2px;
+  background: var(--line);
+}
+
+.progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--progress, 0));
+  background: var(--active);
+}

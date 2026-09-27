@@ -1,0 +1,89 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: var(--text-small);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.button:disabled {
+  opacity: 0.45;
+}
+
+.primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.primary:hover:not(:disabled) {
+  background: #2c2f2b;
+}
+
+.secondary {
+  background: transparent;
+  color: var(--ink);
+}
+
+.quiet {
+  border-color: transparent;
+  padding: 0 10px;
+  color: var(--ink-2);
+}
+
+.quiet:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  transition:
+    color var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+
+.iconButton:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--line-2);
+}
+
+.iconButton:disabled {
+  color: var(--faint);
+}
+
+.iconButton[aria-pressed='true'] {
+  color: var(--active-text);
+}
+
+.small {
+  width: 32px;
+  height: 32px;
+}
+
+.large {
+  width: 48px;
+  height: 48px;
+}

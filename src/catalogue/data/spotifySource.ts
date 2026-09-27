@@ -1,0 +1,125 @@
+import type { AlbumSummary, SearchResults } from '../../domain/types';
+import type { SpotifyClient } from '../../spotify/client';
+import * as api from '../../spotify/endpoints';
+import {
+  mapAlbumDetail,
+  mapAlbumSummary,
+  mapArtistDetail,
+  mapArtistSummary,
+  mapPage,
+  mapPlaylistSummary,
+  mapRecentlyPlayed,
+  mapTrackIdentity,
+} from '../../spotify/mappers';
+import type { SpotifySimplifiedTrack } from '../../spotify/types';
+import {
+  dedupeRecentlyPlayed,
+  normaliseTitle,
+  type CatalogueSource,
+  type PageRequest,
+  type SearchRequest,
+} from './CatalogueSource';
+
+const RELEASE_GROUPS = 'album,single,compilation';
+const MAX_ALBUM_TRACK_PAGES = 40;
+const MAX_TITLE_SEARCH_PAGES = 8;
+
+export function createSpotifyCatalogueSource(client: SpotifyClient): CatalogueSource {
+  return {
+    mode: 'spotify',
+
+    async getRecentlyPlayed(signal) {
+      const page = await api.getRecentlyPlayed(client, 40, signal);
+      return dedupeRecentlyPlayed(mapRecentlyPlayed(page.items ?? []));
+    },
+
+    async getSavedAlbums(page: PageRequest, signal) {
+      const result = await api.getSavedAlbums(client, page, signal);
+      return mapPage(result, (saved) => (saved.album ? mapAlbumSummary(saved.album) : null));
+    },
+
+    async getPlaylists(page: PageRequest, signal) {
+      const result = await api.getMyPlaylists(client, page, signal);
+      return mapPage(result, mapPlaylistSummary);
+    },
+
+    async getAlbum(id, signal) {
+      const album = await api.getAlbum(client, id, signal);
+      const tracks: SpotifySimplifiedTrack[] = [...(album.tracks?.items ?? [])];
+      const total = album.tracks?.total ?? album.total_tracks ?? tracks.length;
+      // The album object embeds only the first page of tracks; fetch the rest.
+      for (let page = 0; tracks.length < total && page < MAX_ALBUM_TRACK_PAGES; page += 1) {
+        const next = await api.getAlbumTracks(client, id, { limit: api.LIMITS.page, offset: tracks.length }, signal);
+        if (next.items.length === 0) break;
+        tracks.push(...next.items);
+      }
+      return mapAlbumDetail(album, tracks);
+    },
+
+    async getArtist(id, signal) {
+      return mapArtistDetail(await api.getArtist(client, id, signal));
+    },
+
+    async getArtistReleases(artistId, page: PageRequest, signal) {
+      const result = await api.getArtistAlbums(
+        client,
+        artistId,
+        { includeGroups: RELEASE_GROUPS, limit: page.limit, offset: page.offset },
+        signal,
+      );
+      return mapPage(result, mapAlbumSummary);
+    },
+
+    async getAlbumSummaries(ids, signal) {
+      // GET /albums?ids= is unavailable to Development Mode apps; fetch individually.
+      const results = await Promise.allSettled(ids.map((id) => api.getAlbum(client, id, signal)));
+      return results.flatMap((r) => (r.status === 'fulfilled' ? [mapAlbumSummary(r.value)] : []));
+    },
+
+    async findArtistReleasesByTitle(artistId, titles, signal) {
+      const wanted = new Map(titles.map((title) => [normaliseTitle(title), title]));
+      const found = new Map<string, AlbumSummary>();
+      for (let page = 0; page < MAX_TITLE_SEARCH_PAGES && found.size < wanted.size; page += 1) {
+        const result = await api.getArtistAlbums(
+          client,
+          artistId,
+          { includeGroups: RELEASE_GROUPS, limit: api.LIMITS.artistAlbums, offset: page * api.LIMITS.artistAlbums },
+          signal,
+        );
+        for (const album of result.items) {
+          const key = normaliseTitle(album.name);
+          if (wanted.has(key) && !found.has(key)) found.set(key, mapAlbumSummary(album));
+        }
+        if (!result.next) break;
+      }
+      // Preserve the editorial order.
+      return titles.flatMap((title) => {
+        const album = found.get(normaliseTitle(title));
+        return album ? [album] : [];
+      });
+    },
+
+    async search(request: SearchRequest, signal): Promise<SearchResults> {
+      const response = await api.search(
+        client,
+        { q: request.query, types: request.types, limit: request.limit, offset: request.offset },
+        signal,
+      );
+      return {
+        tracks: response.tracks ? mapPage(response.tracks, mapTrackIdentity) : null,
+        artists: response.artists ? mapPage(response.artists, mapArtistSummary) : null,
+        albums: response.albums ? mapPage(response.albums, mapAlbumSummary) : null,
+        playlists: response.playlists ? mapPage(response.playlists, mapPlaylistSummary) : null,
+      };
+    },
+
+    checkSaved(uris, signal) {
+      return api.checkLibrary(client, uris, signal);
+    },
+
+    async setSaved(uris, saved) {
+      if (saved) await api.saveToLibrary(client, uris);
+      else await api.removeFromLibrary(client, uris);
+    },
+  };
+}

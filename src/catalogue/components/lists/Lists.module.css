@@ -1,0 +1,264 @@
+/* ── Index rows (recently played, search tracks, playlists) ───────────── */
+
+.index {
+  display: grid;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px 52px minmax(0, 1fr) auto auto;
+  gap: 0 16px;
+  align-items: center;
+  min-height: 72px;
+  padding: 10px 12px 10px 4px;
+  border-bottom: 1px solid var(--line-2);
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.row:first-child {
+  border-top: 1px solid var(--line-2);
+}
+
+.row:hover,
+.row:focus-within {
+  background: var(--line-2);
+}
+
+.row[aria-current='true'] {
+  box-shadow: inset 3px 0 0 var(--active);
+}
+
+.rowIndex {
+  display: grid;
+  place-items: center;
+  font-size: var(--text-micro);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowIndex .playHint {
+  display: none;
+  color: var(--ink);
+}
+
+.row:hover .rowIndex .number,
+.row:focus-within .rowIndex .number {
+  display: none;
+}
+
+.row:hover .rowIndex .playHint,
+.row:focus-within .rowIndex .playHint {
+  display: block;
+}
+
+.rowText {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+/* Primary action: the title button stretches over the whole row. */
+.stretch {
+  justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-body);
+  font-weight: 450;
+  line-height: 1.3;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.stretch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.stretch:focus-visible {
+  outline: none;
+}
+
+.stretch:focus-visible::after {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.rowMeta {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-small);
+  line-height: 1.4;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rowMeta a {
+  color: var(--ink-2);
+}
+
+.rowAside {
+  font-size: var(--text-small);
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.typeLabel {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 0 6px;
+  border: 1px solid var(--line-strong);
+  font-size: var(--text-micro);
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+/* ── Album tiles ──────────────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 40px 28px;
+}
+
+.tile {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tileArt {
+  position: relative;
+  overflow: hidden;
+}
+
+.tileArt > a {
+  display: block;
+}
+
+.tileArt img,
+.tileArt [role='img'] {
+  transition: transform var(--dur) var(--ease);
+}
+
+.tile:hover .tileArt img,
+.tile:hover .tileArt [role='img'] {
+  transform: scale(1.02);
+}
+
+.tilePlay {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  background: var(--ink);
+  color: var(--paper);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.tile:hover .tilePlay,
+.tilePlay:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.tileText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tileTitle {
+  overflow: hidden;
+  font-size: var(--text-body-2);
+  font-weight: 500;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.tileTitle:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.tileMeta {
+  overflow: hidden;
+  font-size: var(--text-micro);
+  line-height: 1.4;
+  color: var(--muted);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ── Playing marker ───────────────────────────────────────────────────── */
+
+.bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 14px;
+  height: 14px;
+  color: var(--active-text);
+}
+
+.bars span {
+  flex: 1;
+  height: 40%;
+  background: currentColor;
+}
+
+.bars[data-playing] span {
+  animation: bar 0.9s var(--ease) infinite alternate;
+}
+
+.bars[data-playing] span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.bars[data-playing] span:nth-child(3) {
+  animation-delay: -0.6s;
+}
+
+.bars:not([data-playing]) span:nth-child(2) {
+  height: 75%;
+}
+
+.bars:not([data-playing]) span:nth-child(3) {
+  height: 55%;
+}
+
+@keyframes bar {
+  from {
+    height: 25%;
+  }
+  to {
+    height: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bars[data-playing] span {
+    animation: none;
+  }
+
+  .bars[data-playing] span:nth-child(2) {
+    height: 75%;
+  }
+}

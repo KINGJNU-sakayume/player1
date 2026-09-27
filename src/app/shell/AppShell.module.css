@@ -1,0 +1,212 @@
+.app {
+  display: grid;
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+/* Now Playing is exactly one viewport high on desktop: no page-level scroll. */
+@media (min-width: 960px) and (min-height: 600px) {
+  .app[data-fixed-viewport] {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}
+
+.skip {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--text-small);
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+/* ── Rail ─────────────────────────────────────────────────────────────── */
+
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  height: 100dvh;
+  padding: 16px 0 18px;
+  border-right: 1px solid var(--line-2);
+  background: var(--paper);
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 46px;
+  height: 54px;
+  border: 1px solid var(--line-strong);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.nav {
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+}
+
+.navItem {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 6px 11px;
+  color: var(--muted);
+  font-size: var(--text-micro);
+  line-height: 1.15;
+  text-align: center;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.navItem:hover {
+  color: var(--ink);
+}
+
+.navItem[aria-current='page'] {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* Active marker: the one place the rail uses album colour. */
+.navItem[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 3px;
+  background: var(--active);
+}
+
+.railFoot {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.railButton {
+  width: 100%;
+}
+
+/* ── Column ───────────────────────────────────────────────────────────── */
+
+.column {
+  display: grid;
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
+  min-width: 0;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  min-width: 0;
+  height: var(--topbar-height);
+  padding: 0 var(--page-gutter) 0 32px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line-2);
+}
+
+.context {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--text-small);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.contextTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-left: auto;
+  min-width: 0;
+}
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.main:focus {
+  outline: none;
+}
+
+.routeFade {
+  flex: 1 1 auto;
+  min-height: 0;
+  animation: route-in var(--dur) var(--ease) both;
+}
+
+@keyframes route-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 10px var(--page-gutter) 10px 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  font-size: var(--text-small);
+  color: var(--ink-2);
+}
+
+.previewTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  font-size: var(--text-micro);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.previewTag strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+@media (max-width: 1100px) {
+  .previewDetail {
+    display: none;
+  }
+}
