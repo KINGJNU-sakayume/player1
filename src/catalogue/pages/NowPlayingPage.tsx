@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { usePageTitle } from '../../app/pageTitle';
 import { useSession } from '../../app/sessionContext';
@@ -19,17 +20,42 @@ import styles from './NowPlayingPage.module.css';
  * integrated controls on the right.
  */
 export function NowPlayingPage() {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const snapshot = usePlayerSnapshot();
   const hydrated = usePlayerSelector((s) => s.hydrated);
   const track = snapshot.track;
   usePageTitle('Now Playing', track?.title ?? null);
+
+  useEffect(() => {
+    const syncFullscreen = () => {
+      const stage = stageRef.current;
+      setIsFullscreen(Boolean(stage && document.fullscreenElement === stage));
+    };
+    document.addEventListener('fullscreenchange', syncFullscreen);
+    syncFullscreen();
+    return () => document.removeEventListener('fullscreenchange', syncFullscreen);
+  }, []);
+
+  const enterFullscreen = useCallback(() => {
+    const request = stageRef.current?.requestFullscreen;
+    if (!request) return;
+    void request.call(stageRef.current).catch((error: unknown) => {
+      console.warn('Unable to enter fullscreen', error);
+    });
+  }, []);
 
   if (!hydrated) return <NowPlayingLoading />;
   if (!track) return <NothingPlaying />;
 
   const { album } = track;
   return (
-    <div className={styles.stage} data-page="now-playing">
+    <div
+      ref={stageRef}
+      className={styles.stage}
+      data-page="now-playing"
+      data-focus-mode={isFullscreen || undefined}
+    >
       <section className={styles.object} aria-label="Now playing">
         <figure className={styles.art}>
           <Cover
@@ -64,8 +90,8 @@ export function NowPlayingPage() {
       </section>
 
       <section className={styles.reading} aria-label="Lyrics and playback controls">
-        <LyricsPanel key={track.spotifyTrackId} track={track} />
-        <PlaybackControls />
+        <LyricsPanel key={track.spotifyTrackId} track={track} minimal={isFullscreen} />
+        <PlaybackControls focusMode={isFullscreen} onEnterFullscreen={enterFullscreen} />
       </section>
     </div>
   );

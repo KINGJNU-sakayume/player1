@@ -22,6 +22,7 @@ export type IconName =
   | 'check'
   | 'plus'
   | 'logout'
+  | 'fullscreen'
   | 'refresh';
 
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'square' as const };
@@ -86,6 +87,7 @@ const PATHS: Record<IconName, ReactElement> = {
   check: <path d="M5 12.5l4.5 4.5L19 7.5" {...stroke} />,
   plus: <path d="M12 5v14M5 12h14" {...stroke} />,
   logout: <path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9" {...stroke} />,
+  fullscreen: <path d="M9 4.5H4.5V9M15 4.5h4.5V9M9 19.5H4.5V15M15 19.5h4.5V15" {...stroke} />,
   refresh: <path d="M19 12a7 7 0 1 1-2.05-4.95M19 4.5V9h-4.5" {...stroke} />,
 };
 

@@ -69,4 +69,52 @@ describe('App (preview catalogue)', () => {
     const seek = screen.getByRole('slider', { name: 'Seek' });
     expect(seek).toHaveAttribute('aria-valuemax', '212');
   });
+
+  it('uses the existing Now Playing stage for fullscreen focus mode and restores its controls on exit', async () => {
+    const user = userEvent.setup();
+    let fullscreenElement: Element | null = null;
+    Object.defineProperty(document, 'fullscreenElement', {
+      configurable: true,
+      get: () => fullscreenElement,
+    });
+    const requestFullscreen = vi.fn(() => {
+      fullscreenElement = document.querySelector('[data-page="now-playing"]');
+      document.dispatchEvent(new Event('fullscreenchange'));
+      return Promise.resolve();
+    });
+    Object.defineProperty(HTMLElement.prototype, 'requestFullscreen', {
+      configurable: true,
+      value: requestFullscreen,
+    });
+
+    renderApp('/now-playing?preview');
+    const fullscreen = await screen.findByRole('button', { name: 'Enter fullscreen' });
+    const translation = screen.getByRole('button', { name: /Translation/ });
+    if (translation.getAttribute('aria-pressed') === 'false') await user.click(translation);
+    expect(await screen.findByText('흐려지기 전에 적어 둬')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pause' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Lyrics' })).toBeInTheDocument();
+
+    await user.click(fullscreen);
+
+    expect(requestFullscreen).toHaveBeenCalledOnce();
+    expect(fullscreenElement).toBe(screen.getByRole('heading', { level: 1, name: 'EARFQUAKE' }).closest('[data-page]'));
+    expect(screen.queryByRole('button', { name: 'Enter fullscreen' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pause' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Lyrics' })).not.toBeInTheDocument();
+    expect(screen.getByText('Write it down before it fades')).toBeInTheDocument();
+    expect(screen.getByText('흐려지기 전에 적어 둬')).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Seek' })).toBeInTheDocument();
+
+    // Presentation mode does not replace the player: the existing global playback
+    // shortcut still reaches the same engine while transport controls are hidden.
+    await user.keyboard(' ');
+    expect(screen.queryByRole('button', { name: 'Enter fullscreen' })).not.toBeInTheDocument();
+
+    fullscreenElement = null;
+    document.dispatchEvent(new Event('fullscreenchange'));
+    expect(await screen.findByRole('button', { name: 'Enter fullscreen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^(Play|Pause)$/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Lyrics' })).toBeInTheDocument();
+  });
 });

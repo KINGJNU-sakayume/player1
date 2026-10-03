@@ -9,14 +9,27 @@ import { SaveTrackButton } from './SaveTrackButton';
 import { ScrubBar } from './ScrubBar';
 import { VolumeControl } from './VolumeControl';
 
+interface PlaybackControlsProps {
+  focusMode?: boolean;
+  onEnterFullscreen?: () => void;
+}
+
 /** Transport integrated into the lyric column — not a detached footer. */
-export function PlaybackControls() {
+export function PlaybackControls({ focusMode = false, onEnterFullscreen }: PlaybackControlsProps) {
   const snapshot = usePlayerSnapshot();
   const engine = useEngine();
   const queue = useQueueDrawer();
   const hasTrack = Boolean(snapshot.track);
   const paused = snapshot.paused;
   const playDisabled = !hasTrack || (paused ? snapshot.disallows.resuming : snapshot.disallows.pausing);
+
+  if (focusMode) {
+    return (
+      <div className={styles.focusControls}>
+        <ScrubBar />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.controls}>
@@ -63,6 +76,9 @@ export function PlaybackControls() {
           <IconButton label="Open queue" icon="queue" onClick={queue.open} />
           <DevicePicker />
           <VolumeControl />
+          {onEnterFullscreen && (
+            <IconButton label="Enter fullscreen" icon="fullscreen" onClick={onEnterFullscreen} />
+          )}
         </div>
       </div>
       <PlaybackNotice />

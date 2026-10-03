@@ -73,7 +73,7 @@ function TranslationStatus({
  * just sung fades above and the next three lines follow at reduced emphasis.
  * The active line comes from the central playback clock.
  */
-export function LyricsPanel({ track }: { track: TrackIdentity }) {
+export function LyricsPanel({ track, minimal = false }: { track: TrackIdentity; minimal?: boolean }) {
   const lyricsState = useTimedLyrics(track);
   const { translation: provider, translationTarget } = useSession();
   const [preferences, setPreferences] = usePreferences();
@@ -102,8 +102,8 @@ export function LyricsPanel({ track }: { track: TrackIdentity }) {
     translation.status === 'ready' && activeIndex >= 0 ? (translation.lines[activeIndex] ?? '').trim() : '';
 
   return (
-    <section className={styles.panel} aria-labelledby="lyrics-label">
-      <header className={styles.head}>
+    <section className={styles.panel} aria-label={minimal ? 'Lyrics' : undefined} aria-labelledby={minimal ? undefined : 'lyrics-label'}>
+      {!minimal && <header className={styles.head}>
         <h2 id="lyrics-label" className={styles.label}>
           Lyrics
         </h2>
@@ -125,7 +125,7 @@ export function LyricsPanel({ track }: { track: TrackIdentity }) {
             </button>
           </div>
         )}
-      </header>
+      </header>}
 
       <div className={styles.body} aria-live="off">
         {lyricsState.status === 'loading' && <LoadingLine label="Finding timed lyrics…" />}
