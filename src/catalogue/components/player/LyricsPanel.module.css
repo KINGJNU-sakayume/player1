@@ -4,6 +4,10 @@
   min-height: 0;
 }
 
+.panel[aria-label='Lyrics'] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .head {
   display: flex;
   flex-wrap: wrap;

@@ -12,6 +12,30 @@
   padding: clamp(18px, 3.4vh, 44px) var(--page-gutter) clamp(16px, 3vh, 36px);
 }
 
+.stage:fullscreen,
+.stage[data-focus-mode] {
+  --gap: clamp(56px, 7vw, 150px);
+  --object-share: 0.4;
+  --meta-reserve: 176px;
+  width: 100vw;
+  height: 100dvh;
+  padding: clamp(36px, 6vh, 84px) clamp(48px, 7vw, 150px);
+  overflow: hidden;
+  background:
+    radial-gradient(90% 70% at 12% 8%, var(--stage-glow), transparent 70%),
+    radial-gradient(70% 60% at 100% 100%, color-mix(in srgb, var(--stage-glow) 55%, transparent), transparent 70%),
+    var(--bg);
+  color: var(--ink);
+}
+
+.stage[data-focus-mode] .art {
+  --art-max: 680px;
+}
+
+.stage[data-focus-mode] .reading {
+  height: min(100%, 980px);
+}
+
 /* Narrower desktop: give the lyrics more room by reducing the cover first. */
 @media (max-width: 1200px) {
   .stage {
@@ -137,5 +161,20 @@
   .reading {
     height: auto;
     min-height: 520px;
+  }
+
+  .stage[data-focus-mode] {
+    width: 100vw;
+    height: 100dvh;
+    padding: clamp(20px, 4vh, 40px) clamp(20px, 5vw, 48px);
+    overflow: auto;
+  }
+
+  .stage[data-focus-mode] .art {
+    width: min(52vh, 100%, 380px);
+  }
+
+  .stage[data-focus-mode] .reading {
+    min-height: min(520px, 75vh);
   }
 }

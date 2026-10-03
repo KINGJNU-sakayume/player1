@@ -6,6 +6,12 @@
   container-type: inline-size;
 }
 
+.focusControls {
+  padding-top: clamp(18px, 3vh, 32px);
+  border-top: 1px solid var(--line);
+  container-type: inline-size;
+}
+
 .progressRow {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr) 52px;
